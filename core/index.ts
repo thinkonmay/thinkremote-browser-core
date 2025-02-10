@@ -189,7 +189,7 @@ class Thinkmay {
                         })
                     )
                     .pipeTo(frameStreams.writable);
-            } catch { }
+            } catch {}
         }
         await this.audio.assign(stream);
         await this.audio.play();
@@ -441,7 +441,6 @@ class Thinkmay {
             setTimeout(this.dataEstablishmentLoop.bind(this), 1000)
         );
     };
-
 
     public async MouseButtonDown(event: { button: number }) {
         const code = EventCode.md;
