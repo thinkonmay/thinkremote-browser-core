@@ -189,7 +189,7 @@ class Thinkmay {
                         })
                     )
                     .pipeTo(frameStreams.writable);
-            } catch {}
+            } catch { }
         }
         await this.audio.assign(stream);
         await this.audio.play();
@@ -310,9 +310,10 @@ class Thinkmay {
         ...keys: { code: EventCode; jsKey: string }[]
     ) {
         for (let index = 0; index < keys.length; index++) {
-            const { jsKey, code } = keys[index];
+            let { jsKey, code } = keys[index];
             const key = convertJSKey(jsKey, 0);
             if (key == undefined) return;
+            if (this?.hid?.scancode) code += 2;
             await this.SendRawHID(new HIDMsg(code, { key }));
         }
     }
@@ -441,6 +442,23 @@ class Thinkmay {
         );
     };
 
+
+    public async MouseButtonDown(event: { button: number }) {
+        const code = EventCode.md;
+        await this.SendRawHID(
+            new HIDMsg(code, {
+                button: event.button
+            })
+        );
+    }
+    public async MouseButtonUp(event: { button: number }) {
+        const code = EventCode.mu;
+        await this.SendRawHID(
+            new HIDMsg(code, {
+                button: event.button
+            })
+        );
+    }
     public Close() {
         this.closed = true;
         clearTimeout(this.missing_frame);

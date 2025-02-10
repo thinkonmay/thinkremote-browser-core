@@ -46,6 +46,20 @@ export async function keyboard(
             jsKey: val
         }))
     );
+
+}
+
+export async function virtMouse(button, action: 'up' | 'down') {
+
+    if (action == 'down') {
+        await CLIENT.MouseButtonDown({ button })
+
+    }
+    else if (action == 'up') {
+        await CLIENT.MouseButtonUp({ button })
+
+    }
+
 }
 export async function gamepadButton(index: number, type: 'up' | 'down') {
     if ('vibrate' in navigator && type == 'down')
