@@ -137,9 +137,9 @@ class RemoteDesktopClient {
                     this.Metrics.video.frame.persecond = Math.round(
                         (val.framesDecoded -
                             this.Metrics.video.frame.totalframes) /
-                        ((now.getTime() -
-                            this.Metrics.video.timestamp.getTime()) /
-                            1000)
+                            ((now.getTime() -
+                                this.Metrics.video.timestamp.getTime()) /
+                                1000)
                     );
                     this.Metrics.video.frame.decodetime =
                         ((val.totalDecodeTime +
@@ -168,7 +168,7 @@ class RemoteDesktopClient {
                                 this.Metrics.video.timestamp.getTime()) /
                                 1000)) *
                             8) /
-                        1024
+                            1024
                     );
                     this.Metrics.video.bitrate.total = val.bytesReceived;
 
@@ -312,7 +312,7 @@ class RemoteDesktopClient {
                     .pipeTo(frameStreams.writable);
 
                 this.waitForNewFrame();
-            } catch { }
+            } catch {}
         }
         await this.video.assign(stream);
     }
@@ -339,7 +339,7 @@ class RemoteDesktopClient {
                         })
                     )
                     .pipeTo(frameStreams.writable);
-            } catch { }
+            } catch {}
         }
         await this.audio.assign(stream);
         await this.audio.play();
@@ -437,18 +437,18 @@ class RemoteDesktopClient {
                 is_slider
                     ? EventCode.GamepadSlide
                     : !isDown
-                        ? EventCode.GamepadButtonDown
-                        : EventCode.GamepadButtonUp,
+                      ? EventCode.GamepadButtonDown
+                      : EventCode.GamepadButtonUp,
                 is_slider
                     ? {
-                        gamepad_id: 0,
-                        index: index,
-                        val: !isDown ? 0 : 1
-                    }
+                          gamepad_id: 0,
+                          index: index,
+                          val: !isDown ? 0 : 1
+                      }
                     : {
-                        gamepad_id: 0,
-                        index: index
-                    }
+                          gamepad_id: 0,
+                          index: index
+                      }
             )
         );
     }
@@ -492,7 +492,6 @@ class RemoteDesktopClient {
         }
     }
 
-
     public async MouseButtonDown(event: { button: number }) {
         const code = EventCode.MouseDown;
         await this.SendRawHID(
@@ -506,6 +505,14 @@ class RemoteDesktopClient {
         await this.SendRawHID(
             new HIDMsg(code, {
                 button: event.button
+            })
+        );
+    }
+    public async MouseWheel(event: { deltaY: number }) {
+        const code = EventCode.MouseWheel;
+        await this.SendRawHID(
+            new HIDMsg(code, {
+                deltaY: -Math.round(event.deltaY)
             })
         );
     }

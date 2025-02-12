@@ -28,8 +28,8 @@ const http_available = () =>
 export function ValidateIPaddress(ipaddress: string) {
     return ipaddress != undefined
         ? /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
-            ipaddress
-        )
+              ipaddress
+          )
         : false;
 }
 const userHttp = (addr: string): boolean =>
@@ -156,7 +156,7 @@ export type StartRequest = {
     };
     s3bucket?: {
         bucket: string;
-        mountPath: string
+        mountPath: string;
     };
     vm?: Computer;
 };
@@ -277,7 +277,7 @@ export async function StartThinkmayOnVM(
     const req: StartRequest = {
         id,
         target,
-        thinkmay,
+        thinkmay
     };
 
     const resp = await internalFetch<StartRequest>(address, 'new', req);
@@ -395,7 +395,7 @@ export async function StartThinkmayOnPeer(
     const req: StartRequest = {
         id,
         target,
-        thinkmay,
+        thinkmay
     };
 
     const resp = await internalFetch<StartRequest>(address, 'new', req);
@@ -445,7 +445,7 @@ export async function StartThinkmay(
     const id = uuidv4();
     const req: StartRequest = {
         id,
-        thinkmay,
+        thinkmay
     };
 
     const resp = await internalFetch<StartRequest>(address, 'new', req);
@@ -559,11 +559,10 @@ export async function StartMoonlight(
         port: PORT.toString()
     };
 
-
     const id = uuidv4();
     const req = {
         id,
-        sunshine,
+        sunshine
     };
 
     const resp = await internalFetch<StartRequest>(address, 'new', req);
@@ -647,4 +646,3 @@ export {
     UserSession
 };
 export type { Computer, NodeType };
-
