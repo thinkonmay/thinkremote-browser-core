@@ -11,11 +11,15 @@ export enum EventCode {
     kus,
     kds,
     kr,
+
+    gconn,
     gs,
     ga,
     gb,
+    grum,
+
     cs,
-    grum
+    noti
 }
 
 export enum ShortcutCode {
@@ -106,8 +110,8 @@ export class HIDMsg {
 
             case EventCode.mmr:
                 return [
-                    Math.round(this.data.dX * 2 ** 32),
-                    Math.round(this.data.dY * 2 ** 32)
+                    Math.round(this.data.dX) + 16 * 1024,
+                    Math.round(this.data.dY) + 16 * 1024
                 ];
             case EventCode.mma:
                 return [
@@ -115,8 +119,7 @@ export class HIDMsg {
                     Math.round(this.data.dY * 2 ** 32)
                 ];
             case EventCode.mw:
-                return this.data.deltaY;
-
+                return [this.data.deltaY + 2048];
             case EventCode.gb:
                 return [this.data.index, this.data.val];
             case EventCode.ga:

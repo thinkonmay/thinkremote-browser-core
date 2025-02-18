@@ -31,21 +31,15 @@ export const GLOBAL = () =>
     );
 
 export function getDomainURL(): string {
-    return 'http://localhost';
+    return !window.location.origin.includes(THINKMAY_DOMAIN)
+        ? 'https://play.thinkmay.net'
+        : window.location.origin;
 }
 export function getDomain(): string {
-    return 'localhost';
+    return !window.location.origin.includes(THINKMAY_DOMAIN)
+        ? 'play.thinkmay.net'
+        : window.location.hostname;
 }
-// export function getDomainURL(): string {
-//     return !window.location.origin.includes(THINKMAY_DOMAIN)
-//         ? 'https://play.thinkmay.net'
-//         : window.location.origin;
-// }
-// export function getDomain(): string {
-//     return !window.location.origin.includes(THINKMAY_DOMAIN)
-//         ? 'play.thinkmay.net'
-//         : window.location.hostname;
-// }
 
 let id = 'unknown';
 const stack: { content: any; timestamp: string }[] = [];

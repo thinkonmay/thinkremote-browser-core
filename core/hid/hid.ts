@@ -259,17 +259,15 @@ export class HID {
         );
     }
     private async mouseWheel(event: WheelEvent) {
-        const code = EventCode.mw;
         await this.SendFunc(
-            new HIDMsg(code, {
+            new HIDMsg(EventCode.mw, {
                 deltaY: -Math.round(event.deltaY)
             })
         );
     }
     public async mouseMoveRel(event: { movementX: number; movementY: number }) {
-        const code = EventCode.mmr;
         await this.SendFunc(
-            new HIDMsg(code, {
+            new HIDMsg(EventCode.mmr, {
                 dX: event.movementX,
                 dY: event.movementY
             })
