@@ -69,6 +69,7 @@ export class MediaRTC {
     private ws: WebSocket;
     private Conn: RTCPeerConnection;
     private watch_loop?: any;
+    private host: string;
 
     private rtrackHandler: (a: RTCTrackEvent) => any;
     private metricHandler: (val: RTCMetric) => void;
@@ -88,12 +89,16 @@ export class MediaRTC {
         this.rtrackHandler = TrackHandler;
         this.sendHandler = () => {};
 
-        const ws = new WebSocket(url);
-        ws.onopen = () => {
-            this.ws = ws;
+        this.host = new URL(url).hostname;
+        try {
+            this.ws = new WebSocket(url);
+        } catch (err) {
+            this.Close();
+        }
+        this.ws.onerror = this.Close.bind(this);
+        this.ws.onclose = this.Close.bind(this);
+        this.ws.onopen = () => {
             this.sendHandler = (data) => this.ws.send(JSON.stringify(data));
-            this.ws.onerror = this.Close.bind(this);
-            this.ws.onclose = this.Close.bind(this);
             this.ws.onmessage = this.handleIncomingPacket.bind(this);
         };
     }
@@ -136,12 +141,12 @@ export class MediaRTC {
                     await this.setupConnection({
                         iceServers: [
                             {
-                                urls: ['turn:127.0.0.1:3478'],
+                                urls: [`turn:${this.host}:3478`],
                                 credential: password,
                                 username
                             },
                             {
-                                urls: ['stun:127.0.0.1:3478']
+                                urls: [`stun:${this.host}:3478`]
                             }
                         ]
                     });

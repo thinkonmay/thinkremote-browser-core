@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import PocketBase from 'pocketbase';
-import { getBrowser, getOS, getResolution } from '../core/utils/platform';
 import { ValidateIPaddress } from '.';
+import { getBrowser, getOS, getResolution } from '../core/utils/platform';
 
 export enum CAUSE {
     UNKNOWN,
@@ -31,15 +31,21 @@ export const GLOBAL = () =>
     );
 
 export function getDomainURL(): string {
-    return !window.location.origin.includes(THINKMAY_DOMAIN)
-        ? 'https://play.thinkmay.net'
-        : window.location.origin;
+    return 'http://localhost';
 }
 export function getDomain(): string {
-    return !window.location.origin.includes(THINKMAY_DOMAIN)
-        ? 'play.thinkmay.net'
-        : window.location.hostname;
+    return 'localhost';
 }
+// export function getDomainURL(): string {
+//     return !window.location.origin.includes(THINKMAY_DOMAIN)
+//         ? 'https://play.thinkmay.net'
+//         : window.location.origin;
+// }
+// export function getDomain(): string {
+//     return !window.location.origin.includes(THINKMAY_DOMAIN)
+//         ? 'play.thinkmay.net'
+//         : window.location.hostname;
+// }
 
 let id = 'unknown';
 const stack: { content: any; timestamp: string }[] = [];

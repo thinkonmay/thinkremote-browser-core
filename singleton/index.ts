@@ -3,7 +3,7 @@ import { EventCode, RemoteDesktopClient } from '../core';
 export const SIZE = () =>
     CLIENT != null
         ? CLIENT.video.internal().videoHeight *
-        CLIENT.video.internal().videoWidth
+          CLIENT.video.internal().videoWidth
         : 1920 * 1080;
 let HQ = false;
 export const set_hq = (val: boolean) => (HQ = val);
@@ -49,10 +49,8 @@ export async function keyboard(
 }
 
 export async function virtMouse(button, action: 'up' | 'down') {
-    if (action == 'down')
-        await CLIENT.MouseButtonDown({ button });
-    else if (action == 'up')
-        await CLIENT.MouseButtonUp({ button });
+    if (action == 'down') await CLIENT.MouseButtonDown({ button });
+    else if (action == 'up') await CLIENT.MouseButtonUp({ button });
 }
 export async function gamepadButton(index: number, type: 'up' | 'down') {
     if ('vibrate' in navigator && type == 'down')

@@ -423,8 +423,9 @@ class Thinkmay {
         }
 
         start = Thinkmay.Now();
+        await this.ResetVideo();
         while (this.Metrics.video.frame.totalframes == 0) {
-            if (Thinkmay.Now() - start > 3 * 1000)
+            if (Thinkmay.Now() - start > 5 * 1000)
                 return this.videoConn.Close();
             else if (this.videoConn.closed) return;
             else await new Promise((r) => setTimeout(r, 300));

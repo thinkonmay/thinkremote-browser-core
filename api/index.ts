@@ -116,6 +116,14 @@ async function GetInfo(ip: string): Promise<Computer | Error> {
     return await internalFetch<Computer>(ip, 'info');
 }
 
+type Volume = {
+    backing: 'os' | string;
+    size?: number;
+    name: string;
+    inuse?: boolean;
+    pool: 'user_data' | 'app_data' | string;
+};
+
 type Computer = {
     Hostname?: string;
     CPU?: string;
@@ -125,7 +133,7 @@ type Computer = {
     remoteReady?: boolean;
     virtReady?: boolean;
 
-    Volumes?: string[];
+    Volumes?: Volume[];
     Sessions?: Session[];
     Interfaces?: {
         publicIp?: string;
@@ -191,7 +199,7 @@ export async function StartThinkmay(
     address: string,
     vm_request?: Computer,
     showStatus?: (status: string) => Promise<void>
-): Promise<Error | Session> {
+): Promise<Computer | Error> {
     const req = {
         id: uuidv4(),
         thinkmay: {
@@ -220,12 +228,12 @@ export async function StartThinkmay(
             }
         })(req);
 
-    let resp: Error | Session = new Error('unable to request');
+    let resp: Error | Computer = new Error('unable to request');
     try {
-        resp = await internalFetch<Session>(address, 'new', req);
+        resp = await internalFetch<Computer>(address, 'new', req);
     } catch (err) {
         running = false;
-        return new Error(JSON.stringify(err));
+        return new Error(err);
     }
     running = false;
     return resp;
@@ -236,7 +244,7 @@ export async function LoginSteamOnVM(
     target: string,
     username: string,
     password: string
-): Promise<Session | Error> {
+): Promise<Computer | Error> {
     const id = uuidv4();
     const req: Session = {
         id,
@@ -248,9 +256,7 @@ export async function LoginSteamOnVM(
         }
     };
 
-    const resp = await internalFetch<Session>(address, 'new', req);
-    if (resp instanceof Error) throw resp;
-    return req;
+    return await internalFetch<Computer>(address, 'new', req);
 }
 export async function LogoutSteamOnVM(
     address: string,
@@ -264,7 +270,7 @@ export async function MountOnVM(
     address: string,
     target: string,
     bucket_name: string
-): Promise<Session | Error> {
+): Promise<Computer | Error> {
     const id = uuidv4();
     const req: Session = {
         id,
@@ -275,9 +281,7 @@ export async function MountOnVM(
         }
     };
 
-    const resp = await internalFetch<Session>(address, 'new', req);
-    if (resp instanceof Error) throw resp;
-    return req;
+    return await internalFetch<Computer>(address, 'new', req);
 }
 export async function UnmountOnVM(
     address: string,
@@ -299,9 +303,9 @@ export function ParseRequest(
     if (userHttp(address))
         return {
             logUrl: `http://${address}/log?target=${id}`,
-            videoUrl: `ws://${address}:60001/broadcasters/webrtc?token=${video.token}`,
-            audioUrl: `ws://${address}:60001/broadcasters/webrtc?token=${audio.token}`,
-            dataUrl: `ws://${address}:60001/broadcasters/websocket?token=${data.token}`
+            videoUrl: `ws://${address}/broadcasters/webrtc?token=${video.token}`,
+            audioUrl: `ws://${address}/broadcasters/webrtc?token=${audio.token}`,
+            dataUrl: `ws://${address}/broadcasters/websocket?token=${data.token}`
         };
     else
         return {
@@ -370,9 +374,8 @@ export async function StartMoonlight(
 export async function CloseSession(
     address: string,
     req: Session
-): Promise<Error | 'SUCCESS'> {
-    const resp = await internalFetch(address, 'closed', req);
-    return resp instanceof Error ? resp : 'SUCCESS';
+): Promise<Error | Computer> {
+    return internalFetch<Computer>(address, 'closed', req);
 }
 
 function getRandomInt(min: number, max: number) {
@@ -399,11 +402,26 @@ async function DiscordRichPresence(app_id: string): Promise<string> {
     return command.stdout + '\n' + command.stderr;
 }
 
+function getRemoteSession(computer: Computer): Session | undefined {
+    if (computer.Sessions == undefined) return undefined;
+    for (const session of computer.Sessions) {
+        if (session.vm != undefined) {
+            const subsession = getRemoteSession(session.vm);
+            if (subsession != undefined) return subsession;
+        }
+
+        if (session.thinkmay != undefined) return session;
+    }
+
+    return undefined;
+}
+
 export {
     CAUSE,
     getDomain,
     getDomainURL,
     GetInfo,
+    getRemoteSession,
     GLOBAL,
     LOCAL,
     POCKETBASE,
