@@ -13,6 +13,7 @@ export enum EventCode {
     kr,
 
     gconn,
+    gdis,
     gs,
     ga,
     gb,
@@ -122,6 +123,8 @@ export class HIDMsg {
                 return [this.data.deltaY + 2048];
 
             case EventCode.gconn:
+                return [this.data.gid];
+            case EventCode.gdis:
                 return [this.data.gid];
             case EventCode.gb:
                 return [this.data.gid, this.data.index, this.data.val];
