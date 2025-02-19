@@ -120,14 +120,15 @@ export class HIDMsg {
                 ];
             case EventCode.mw:
                 return [this.data.deltaY + 2048];
+
+            case EventCode.gconn:
+                return [this.data.gid];
             case EventCode.gb:
-                return [this.data.index, this.data.val];
+                return [this.data.gid, this.data.index, this.data.val];
             case EventCode.ga:
-                return [this.data.index, this.data.val];
+                return [this.data.gid, this.data.index, this.data.val];
             case EventCode.gs:
-                return [this.data.index, this.data.val];
-            default:
-                return [];
+                return [this.data.gid, this.data.index, this.data.val];
         }
     }
 }

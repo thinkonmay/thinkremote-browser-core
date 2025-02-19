@@ -99,7 +99,10 @@ export class MediaRTC {
         this.ws.onclose = this.Close.bind(this);
         this.ws.onopen = () => {
             this.sendHandler = (data) => this.ws.send(JSON.stringify(data));
-            this.ws.onmessage = this.handleIncomingPacket.bind(this);
+            this.ws.onmessage = (ev) =>
+                this.handleIncomingPacket
+                    .bind(this)(ev)
+                    .catch(() => {});
         };
     }
 

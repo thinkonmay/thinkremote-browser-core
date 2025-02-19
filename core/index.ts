@@ -123,6 +123,7 @@ class Thinkmay {
     private audioConn: MediaRTC;
     private dataConn: DataRTC;
     private closed: boolean;
+    private gid = Math.round(Math.random() * 255);
 
     private async audioTransform(
         encodedFrame: RTCEncodedAudioFrame,
@@ -162,7 +163,7 @@ class Thinkmay {
                         })
                     )
                     .pipeTo(frameStreams.writable);
-            } catch { }
+            } catch {}
         }
         await this.video.assign(stream);
     }
@@ -189,7 +190,7 @@ class Thinkmay {
                         })
                     )
                     .pipeTo(frameStreams.writable);
-            } catch { }
+            } catch {}
         }
         await this.audio.assign(stream);
         await this.audio.play();
@@ -270,13 +271,15 @@ class Thinkmay {
                 is_slider ? EventCode.gs : EventCode.gb,
                 is_slider
                     ? {
-                        index: index,
-                        val: !isDown ? 0 : 1
-                    }
+                          gid: this.gid,
+                          index: index,
+                          val: !isDown ? 0 : 1
+                      }
                     : {
-                        index: index,
-                        val: !isDown ? 0 : 1
-                    }
+                          gid: this.gid,
+                          index: index,
+                          val: !isDown ? 0 : 1
+                      }
             )
         );
     }
@@ -296,10 +299,12 @@ class Thinkmay {
 
         await this.SendRawHID(
             new HIDMsg(EventCode.ga, {
+                gid: this.gid,
                 index: axisx,
                 val: x
             }),
             new HIDMsg(EventCode.ga, {
+                gid: this.gid,
                 index: axisy,
                 val: y
             })
@@ -326,9 +331,9 @@ class Thinkmay {
             case 'video':
                 this.Metrics.video.frame.persecond = Math.round(
                     (val.framesDecoded - this.Metrics.video.frame.totalframes) /
-                    ((now.getTime() -
-                        this.Metrics.video.timestamp.getTime()) /
-                        1000)
+                        ((now.getTime() -
+                            this.Metrics.video.timestamp.getTime()) /
+                            1000)
                 );
                 this.Metrics.video.frame.decodetime =
                     ((val.totalDecodeTime +
@@ -356,7 +361,7 @@ class Thinkmay {
                             this.Metrics.video.timestamp.getTime()) /
                             1000)) *
                         8) /
-                    1024
+                        1024
                 );
                 this.Metrics.video.bitrate.total = val.bytesReceived;
 
@@ -441,12 +446,17 @@ class Thinkmay {
         this.dataConn = new DataRTC(this.dataUrl, () =>
             setTimeout(this.dataEstablishmentLoop.bind(this), 1000)
         );
+
+        await this.SendRawHID(
+            new HIDMsg(EventCode.gconn, {
+                gid: this.gid
+            })
+        );
     };
 
     public async MouseButtonDown(event: { button: number }) {
-        const code = EventCode.md;
         await this.SendRawHID(
-            new HIDMsg(code, {
+            new HIDMsg(EventCode.md, {
                 button: event.button
             })
         );

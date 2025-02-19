@@ -14,9 +14,10 @@ export class DataRTC {
         this.closeHandler = CloseHandler;
         this.recv = [];
 
-        const ws = new WebSocket(url);
-        ws.onopen = () => {
-            this.ws = ws;
+        try {
+            this.ws = new WebSocket(url);
+        } catch {}
+        this.ws.onopen = () => {
             this.ws.onerror = this.Close.bind(this);
             this.ws.onclose = this.Close.bind(this);
             this.ws.onmessage = this.onMessage.bind(this);
