@@ -3,8 +3,7 @@ import { Child, Command } from '@tauri-apps/api/shell';
 import { v4 as uuidv4 } from 'uuid';
 import {
     CAUSE,
-    getDomain,
-    getDomainURL,
+    getFrontendURL,
     GLOBAL,
     LOCAL,
     POCKETBASE,
@@ -418,8 +417,7 @@ function getRemoteSession(computer: Computer): Session | undefined {
 
 export {
     CAUSE,
-    getDomain,
-    getDomainURL,
+    getFrontendURL,
     GetInfo,
     getRemoteSession,
     GLOBAL,
