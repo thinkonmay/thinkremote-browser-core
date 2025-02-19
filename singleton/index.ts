@@ -49,8 +49,15 @@ export async function keyboard(
 }
 
 export async function virtMouse(button, action: 'up' | 'down') {
-    if (action == 'down') await CLIENT.MouseButtonDown({ button });
-    else if (action == 'up') await CLIENT.MouseButtonUp({ button });
+    if (action == 'down') {
+        await CLIENT.MouseButtonDown({ button });
+    } else if (action == 'up') {
+        await CLIENT.MouseButtonUp({ button });
+    }
+}
+
+export async function virtMouseWheel(deltaY) {
+    await CLIENT.MouseWheel({ deltaY });
 }
 export async function gamepadButton(index: number, type: 'up' | 'down') {
     if ('vibrate' in navigator && type == 'down')

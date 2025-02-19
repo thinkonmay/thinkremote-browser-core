@@ -162,7 +162,7 @@ class Thinkmay {
                         })
                     )
                     .pipeTo(frameStreams.writable);
-            } catch {}
+            } catch { }
         }
         await this.video.assign(stream);
     }
@@ -189,7 +189,7 @@ class Thinkmay {
                         })
                     )
                     .pipeTo(frameStreams.writable);
-            } catch {}
+            } catch { }
         }
         await this.audio.assign(stream);
         await this.audio.play();
@@ -270,13 +270,13 @@ class Thinkmay {
                 is_slider ? EventCode.gs : EventCode.gb,
                 is_slider
                     ? {
-                          index: index,
-                          val: !isDown ? 0 : 1
-                      }
+                        index: index,
+                        val: !isDown ? 0 : 1
+                    }
                     : {
-                          index: index,
-                          val: !isDown ? 0 : 1
-                      }
+                        index: index,
+                        val: !isDown ? 0 : 1
+                    }
             )
         );
     }
@@ -326,9 +326,9 @@ class Thinkmay {
             case 'video':
                 this.Metrics.video.frame.persecond = Math.round(
                     (val.framesDecoded - this.Metrics.video.frame.totalframes) /
-                        ((now.getTime() -
-                            this.Metrics.video.timestamp.getTime()) /
-                            1000)
+                    ((now.getTime() -
+                        this.Metrics.video.timestamp.getTime()) /
+                        1000)
                 );
                 this.Metrics.video.frame.decodetime =
                     ((val.totalDecodeTime +
@@ -356,7 +356,7 @@ class Thinkmay {
                             this.Metrics.video.timestamp.getTime()) /
                             1000)) *
                         8) /
-                        1024
+                    1024
                 );
                 this.Metrics.video.bitrate.total = val.bytesReceived;
 
@@ -452,10 +452,16 @@ class Thinkmay {
         );
     }
     public async MouseButtonUp(event: { button: number }) {
-        const code = EventCode.mu;
         await this.SendRawHID(
-            new HIDMsg(code, {
+            new HIDMsg(EventCode.mu, {
                 button: event.button
+            })
+        );
+    }
+    public async MouseWheel(event: { deltaY: number }) {
+        await this.SendRawHID(
+            new HIDMsg(EventCode.mw, {
+                deltaY: -Math.round(event.deltaY)
             })
         );
     }
@@ -478,8 +484,8 @@ export {
     AudioWrapper,
     ConnectionEvent,
     EventCode,
-    Thinkmay as RemoteDesktopClient,
-    VideoWrapper,
     isMobile,
-    useShift
+    Thinkmay as RemoteDesktopClient,
+    useShift,
+    VideoWrapper
 };
