@@ -1,3 +1,4 @@
+import { log } from '../../../src/backend/utils/log';
 import {
     EventCode,
     HIDMsg,
@@ -6,6 +7,7 @@ import {
     ShortcutCode
 } from '../models/keys.model';
 import { convertJSKey } from '../utils/convert';
+import { Log, LogLevel } from '../utils/log';
 import { requestFullscreen } from '../utils/screen';
 
 const MOUSE_SPEED = 1.07;
@@ -136,16 +138,13 @@ export class HID {
     }
 
     public handleIncomingData(data: string) {
-        const [typ, first, second] = data.split('|');
-        switch (typ) {
-            case 'grum':
-                const weakMagnitude = Number.isNaN(Number.parseInt(first))
-                    ? 1.0
-                    : Number.parseInt(first) / 255;
-                const strongMagnitude = Number.isNaN(Number.parseInt(second))
-                    ? 1.0
-                    : Number.parseInt(second) / 255;
+        const buff = new TextEncoder().encode(data)
+        switch (buff.at(0)) {
+            case EventCode.grum:
+                const weakMagnitude = buff[2] / 255;
+                const strongMagnitude = buff[3] / 255;
                 const duration = 1000;
+
                 if (strongMagnitude > 0 || weakMagnitude > 0)
                     navigator.vibrate?.(duration);
                 navigator.getGamepads().forEach((gamepad: Gamepad | null) => {
@@ -156,6 +155,8 @@ export class HID {
                     });
                 });
                 break;
+            case EventCode.noti:
+                Log(LogLevel.Warning,data.slice(1))
             default:
                 break;
         }

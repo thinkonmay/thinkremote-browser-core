@@ -129,6 +129,8 @@ export class HIDMsg {
                 return [this.data.gid, this.data.index, this.data.val];
             case EventCode.gs:
                 return [this.data.gid, this.data.index, this.data.val];
+            default:
+                return [];
         }
     }
 }

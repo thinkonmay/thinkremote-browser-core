@@ -6,30 +6,33 @@ export class DataRTC {
 
     private closeHandler: () => void;
     private ws: WebSocket;
-    private recv: string[];
+    private send: Uint32Array[];
 
-    constructor(url: string, CloseHandler: () => void) {
+    constructor(url: string, 
+        closeHandler: () => void, 
+        messageHandler: (data: any) => void
+    ) {
         this.closed = false;
-        this.connected = false;
-        this.closeHandler = CloseHandler;
-        this.recv = [];
+        this.closeHandler = closeHandler;
+        this.send = [];
 
         try {
             this.ws = new WebSocket(url);
         } catch {}
-        this.ws.onopen = () => {
+        this.ws.onopen = async () => {
             this.ws.onerror = this.Close.bind(this);
             this.ws.onclose = this.Close.bind(this);
-            this.ws.onmessage = this.onMessage.bind(this);
+            this.ws.onmessage = e => messageHandler(e.data)
+            while(!this.closed) {
+                while (this.send.length == 0) 
+                    await new Promise(r => setTimeout(r,10))
+
+                this.ws.send(this.send.pop().buffer)
+            }
         };
     }
 
-    private onMessage(data: MessageEvent) {
-        this.recv.push(data.data);
-    }
-
     public Close() {
-        this.connected = false;
         this.closed = true;
 
         const close = this.closeHandler;
@@ -38,18 +41,6 @@ export class DataRTC {
     }
 
     public Send(type: EventCode, ...arr: number[]) {
-        this.ws?.send(new Uint32Array([type, ...arr]).buffer);
-    }
-
-    public async Recv(): Promise<string | Error> {
-        while (this.recv.length == 0) {
-            if (this.closed) {
-                return new Error('closed');
-            }
-
-            await new Promise((r) => setTimeout(r, 10));
-        }
-
-        return this.recv.pop() ?? '';
+        this.send.push(new Uint32Array([type, ...arr]))
     }
 }
