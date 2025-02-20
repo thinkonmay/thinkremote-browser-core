@@ -129,9 +129,9 @@ export class HIDMsg {
             case EventCode.gb:
                 return [this.data.gid, this.data.index, this.data.val];
             case EventCode.ga:
-                return [this.data.gid, this.data.index, this.data.val];
+                return [this.data.gid, this.data.index, Math.round((this.data.val+1) * 2 ** 31)];
             case EventCode.gs:
-                return [this.data.gid, this.data.index, this.data.val];
+                return [this.data.gid, this.data.index, Math.round((this.data.val+1) * 2 ** 31)];
             default:
                 return [];
         }

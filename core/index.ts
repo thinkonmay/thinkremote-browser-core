@@ -123,7 +123,7 @@ class Thinkmay {
     private audioConn: MediaRTC;
     private dataConn: DataRTC;
     private closed: boolean;
-    private gid = Math.round(Math.random() * 255);
+    private gid = 0;
 
     private async audioTransform(
         encodedFrame: RTCEncodedAudioFrame,
@@ -446,12 +446,6 @@ class Thinkmay {
         this.dataConn = new DataRTC(this.dataUrl, 
             () => setTimeout(this.dataEstablishmentLoop.bind(this), 1000),
             this.hid.handleIncomingData.bind(this.hid),
-        );
-
-        await this.SendRawHID(
-            new HIDMsg(EventCode.gconn, {
-                gid: this.gid
-            })
         );
     };
 
