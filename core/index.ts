@@ -443,9 +443,10 @@ class Thinkmay {
     private dataEstablishmentLoop = async () => {
         if (this.closed) return;
 
-        this.dataConn = new DataRTC(this.dataUrl, 
+        this.dataConn = new DataRTC(
+            this.dataUrl,
             () => setTimeout(this.dataEstablishmentLoop.bind(this), 1000),
-            this.hid.handleIncomingData.bind(this.hid),
+            this.hid.handleIncomingData.bind(this.hid)
         );
     };
 

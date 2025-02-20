@@ -116,8 +116,8 @@ export class HIDMsg {
                 ];
             case EventCode.mma:
                 return [
-                    Math.round(this.data.dX * 2 ** 32),
-                    Math.round(this.data.dY * 2 ** 32)
+                    Math.round(this.data.dX * 2 ** 32) - 1,
+                    Math.round(this.data.dY * 2 ** 32) - 1
                 ];
             case EventCode.mw:
                 return [this.data.deltaY + 2048];
@@ -129,9 +129,17 @@ export class HIDMsg {
             case EventCode.gb:
                 return [this.data.gid, this.data.index, this.data.val];
             case EventCode.ga:
-                return [this.data.gid, this.data.index, Math.round((this.data.val+1) * 2 ** 31)];
+                return [
+                    this.data.gid,
+                    this.data.index,
+                    Math.round((this.data.val + 1) * 2 ** 31) - 1
+                ];
             case EventCode.gs:
-                return [this.data.gid, this.data.index, Math.round((this.data.val+1) * 2 ** 31)];
+                return [
+                    this.data.gid,
+                    this.data.index,
+                    Math.round((this.data.val + 1) * 2 ** 31) - 1
+                ];
             default:
                 return [];
         }

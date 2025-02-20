@@ -70,6 +70,8 @@ export class MediaRTC {
     private Conn: RTCPeerConnection;
     private watch_loop?: any;
     private host: string;
+    private pending_ices: RTCIceCandidateInit[];
+    private has_rsdp: boolean;
 
     private rtrackHandler: (a: RTCTrackEvent) => any;
     private metricHandler: (val: RTCMetric) => void;
@@ -84,6 +86,8 @@ export class MediaRTC {
     ) {
         this.closed = false;
         this.connected = false;
+        this.pending_ices = [];
+        this.has_rsdp = false;
         this.metricHandler = MetricsHandler;
         this.closeHandler = CloseHandler;
         this.rtrackHandler = TrackHandler;
@@ -135,9 +139,12 @@ export class MediaRTC {
                 case 'sdp':
                     const ans = await this.onIncomingSDP(data);
                     this.sendHandler({ event: 'sdp', data: ans });
+                    this.has_rsdp = true;
+                    this.pending_ices.forEach((x) => this.onIncomingICE(x));
                     break;
                 case 'ice':
-                    await this.onIncomingICE(data);
+                    if (!this.has_rsdp) this.pending_ices.push(data);
+                    else await this.onIncomingICE(data);
                     break;
                 case 'open':
                     const { username, password } = data;

@@ -1,4 +1,3 @@
-import { log } from '../../../src/backend/utils/log';
 import {
     EventCode,
     HIDMsg,
@@ -138,7 +137,7 @@ export class HID {
     }
 
     public handleIncomingData(data: string) {
-        const buff = new TextEncoder().encode(data)
+        const buff = new TextEncoder().encode(data);
         switch (buff.at(0)) {
             case EventCode.grum:
                 const weakMagnitude = buff[2] / 255;
@@ -156,7 +155,7 @@ export class HID {
                 });
                 break;
             case EventCode.noti:
-                Log(LogLevel.Warning,data.slice(1))
+                Log(LogLevel.Warning, data.slice(1));
             default:
                 break;
         }

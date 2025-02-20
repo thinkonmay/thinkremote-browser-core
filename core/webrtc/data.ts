@@ -8,8 +8,9 @@ export class DataRTC {
     private ws: WebSocket;
     private send: Uint32Array[];
 
-    constructor(url: string, 
-        closeHandler: () => void, 
+    constructor(
+        url: string,
+        closeHandler: () => void,
         messageHandler: (data: any) => void
     ) {
         this.closed = false;
@@ -22,12 +23,12 @@ export class DataRTC {
         this.ws.onopen = async () => {
             this.ws.onerror = this.Close.bind(this);
             this.ws.onclose = this.Close.bind(this);
-            this.ws.onmessage = e => messageHandler(e.data)
-            while(!this.closed) {
-                while (this.send.length == 0) 
-                    await new Promise(r => setTimeout(r,10))
+            this.ws.onmessage = (e) => messageHandler(e.data);
+            while (!this.closed) {
+                while (this.send.length == 0)
+                    await new Promise((r) => setTimeout(r, 10));
 
-                this.ws.send(this.send.pop().buffer)
+                this.ws.send(this.send.pop().buffer);
             }
         };
     }
@@ -41,6 +42,6 @@ export class DataRTC {
     }
 
     public Send(type: EventCode, ...arr: number[]) {
-        this.send.push(new Uint32Array([type, ...arr]))
+        this.send.push(new Uint32Array([type, ...arr]));
     }
 }
