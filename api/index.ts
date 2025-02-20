@@ -302,9 +302,9 @@ export function ParseRequest(
     if (userHttp(address))
         return {
             logUrl: `http://${address}/log?target=${id}`,
-            videoUrl: `ws://${address}/broadcasters/webrtc?token=${video.token}`,
-            audioUrl: `ws://${address}/broadcasters/webrtc?token=${audio.token}`,
-            dataUrl: `ws://${address}/broadcasters/websocket?token=${data.token}`
+            videoUrl: `ws://${address}/broadcasters/webrtc?token=${video.token}&queue_size=4&mtu=1200`,
+            audioUrl: `ws://${address}/broadcasters/webrtc?token=${audio.token}&queue_size=4&mtu=1200`,
+            dataUrl: `ws://${address}/broadcasters/websocket?token=${data.token}&queue_size=4&mtu=1200`
         };
     else
         return {
