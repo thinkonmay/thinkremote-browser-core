@@ -25,8 +25,8 @@ export const LOCAL = () =>
     createClient(getFrontendURL(), import.meta.env.VITE_SUPABASE_LOCAL_KEY);
 export const GLOBAL = () =>
     createClient(
-        import.meta.env.VITE_SUPABASE_GLOBAL_URL,
-        import.meta.env.VITE_SUPABASE_GLOBAL_KEY
+        'https://play.thinkmay.net',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzIzMTM2NDAwLAogICJleHAiOiAxODgwOTAyODAwCn0.SdW2AcXzhRFNBt9HmJw6sKa7lWDmVjbXdRF1mIjrDao'
     );
 
 export function getFrontendURL(): string {
@@ -68,7 +68,7 @@ export async function UserSession(email: string) {
     const session = await (async () => {
         if (id != 'unknown') return id;
 
-        const { data, error } = await LOCAL()
+        const { data, error } = await GLOBAL()
             .from('generic_events')
             .insert({
                 value,
@@ -87,7 +87,7 @@ export async function UserSession(email: string) {
         if (stack.length == current_stack_length) return;
 
         value.stack = stack;
-        await LOCAL()
+        await GLOBAL()
             .from('generic_events')
             .update({ value })
             .eq('id', session);
