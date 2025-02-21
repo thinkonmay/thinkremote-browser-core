@@ -6,7 +6,6 @@ export class DataRTC {
 
     private closeHandler: () => void;
     private ws: WebSocket;
-    private send: ArrayBufferLike[];
 
     constructor(
         url: string,
@@ -15,21 +14,14 @@ export class DataRTC {
     ) {
         this.closed = false;
         this.closeHandler = closeHandler;
-        this.send = [];
 
         try {
             this.ws = new WebSocket(url);
-        } catch {}
+        } catch { }
         this.ws.onopen = async () => {
             this.ws.onerror = this.Close.bind(this);
             this.ws.onclose = this.Close.bind(this);
             this.ws.onmessage = (e) => messageHandler(e.data);
-            while (!this.closed) {
-                while (this.send.length == 0)
-                    await new Promise((r) => setTimeout(r, 10));
-
-                this.ws.send(this.send.pop());
-            }
         };
     }
 
@@ -37,17 +29,23 @@ export class DataRTC {
         this.closed = true;
 
         const close = this.closeHandler;
-        this.closeHandler = () => {};
+        this.closeHandler = () => { };
         close();
     }
 
     public Send(type: EventCode, ...arr: number[]) {
-        this.send.push(new Uint32Array([type, ...arr]).buffer);
+        if (this.closed)
+            return
+
+        this.ws.send(new Uint32Array([type, ...arr]).buffer);
     }
     public SendClipboard(val: string) {
+        if (this.closed)
+            return
+
         const buff = new TextEncoder().encode(btoa(val));
         const first = new Uint8Array([EventCode.cs, 0, 0, 0]);
-        this.send.push(this.concatTypedArrays(first, buff).buffer);
+        this.ws.send(this.concatTypedArrays(first, buff).buffer);
     }
 
     private concatTypedArrays(a: Uint8Array, b: Uint8Array): Uint8Array {
