@@ -18,20 +18,15 @@ export enum CAUSE {
     INVALID_REF
 }
 
-export const RPOCKETBASE = (domain: string) =>
-    new PocketBase(`https://${domain}`);
+export function getFrontendURL(): string {
+    return 'https://play.2.thinkmay.net';
+}
 export const POCKETBASE = new PocketBase(getFrontendURL());
-export const LOCAL = () =>
-    createClient(getFrontendURL(), import.meta.env.VITE_SUPABASE_LOCAL_KEY);
 export const GLOBAL = () =>
     createClient(
         'https://play.thinkmay.net',
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzIzMTM2NDAwLAogICJleHAiOiAxODgwOTAyODAwCn0.SdW2AcXzhRFNBt9HmJw6sKa7lWDmVjbXdRF1mIjrDao'
     );
-
-export function getFrontendURL(): string {
-    return 'https://play.2.thinkmay.net';
-}
 
 let id = 'unknown';
 const stack: { content: any; timestamp: string }[] = [];

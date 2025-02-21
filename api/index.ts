@@ -5,7 +5,6 @@ import {
     CAUSE,
     getFrontendURL,
     GLOBAL,
-    LOCAL,
     POCKETBASE,
     UserEvents,
     UserSession
@@ -117,6 +116,7 @@ async function GetInfo(ip: string): Promise<Computer | Error> {
 
 type Volume = {
     backing: 'os' | string;
+    node: string;
     size?: number;
     name: string;
     inuse?: boolean;
@@ -421,7 +421,6 @@ export {
     GetInfo,
     getRemoteSession,
     GLOBAL,
-    LOCAL,
     POCKETBASE,
     UserEvents,
     UserSession
