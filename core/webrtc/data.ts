@@ -6,7 +6,7 @@ export class DataRTC {
 
     private closeHandler: () => void;
     private ws: WebSocket;
-    private send: Uint32Array[];
+    private send: ArrayBufferLike[];
 
     constructor(
         url: string,
@@ -28,7 +28,7 @@ export class DataRTC {
                 while (this.send.length == 0)
                     await new Promise((r) => setTimeout(r, 10));
 
-                this.ws.send(this.send.pop().buffer);
+                this.ws.send(this.send.pop());
             }
         };
     }
@@ -42,6 +42,19 @@ export class DataRTC {
     }
 
     public Send(type: EventCode, ...arr: number[]) {
-        this.send.push(new Uint32Array([type, ...arr]));
+        this.send.push(new Uint32Array([type, ...arr]).buffer);
+    }
+    public SendClipboard(val: string) {
+        const buff = new TextEncoder().encode(btoa(val));
+        const first = new Uint8Array([EventCode.cs, 0, 0, 0]);
+        this.send.push(this.concatTypedArrays(first, buff).buffer);
+    }
+
+    private concatTypedArrays(a: Uint8Array, b: Uint8Array): Uint8Array {
+        // a, b TypedArray of same type
+        var c = new Uint8Array(a.length + b.length);
+        c.set(a, 0);
+        c.set(b, a.length);
+        return c;
     }
 }

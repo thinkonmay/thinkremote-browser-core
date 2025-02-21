@@ -131,11 +131,6 @@ export class HID {
         this.shortcuts = new Array<Shortcut>();
     }
 
-    public async PasteClipboard() {
-        const code = EventCode.cs;
-        await this.SendFunc(new HIDMsg(code, {}));
-    }
-
     public handleIncomingData(data: string) {
         const buff = new TextEncoder().encode(data);
         switch (buff.at(0)) {

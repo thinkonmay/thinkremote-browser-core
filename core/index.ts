@@ -252,16 +252,14 @@ class Thinkmay {
     async SendRawHID(...data: HIDMsg[]) {
         if (this.closed) return;
         for (const element of data) {
-            this.dataConn.Send(element.convertType(), ...element.buffer());
+            if (element.convertType() == EventCode.cs)
+                this.dataConn.SendClipboard(element.data.val);
+            else this.dataConn.Send(element.convertType(), ...element.buffer());
         }
     }
     public async SetClipboard(val: string) {
         if (this.closed) return;
-        await this.SendRawHID(
-            new HIDMsg(EventCode.cs, {
-                val: btoa(val)
-            })
-        );
+        await this.SendRawHID(new HIDMsg(EventCode.cs, { val }));
     }
 
     public async VirtualGamepadButton(isDown: boolean, index: number) {
@@ -314,13 +312,11 @@ class Thinkmay {
     public async VirtualKeyboard(
         ...keys: { code: EventCode; jsKey: string }[]
     ) {
-        for (let index = 0; index < keys.length; index++) {
-            let { jsKey, code } = keys[index];
-            const key = convertJSKey(jsKey, 0);
-            if (key == undefined) return;
-            if (this?.hid?.scancode) code += 2;
-            await this.SendRawHID(new HIDMsg(code, { key }));
-        }
+        return await this.SendRawHID(
+            ...keys.map(
+                (x) => new HIDMsg(x.code, { key: convertJSKey(x.jsKey, 0) })
+            )
+        );
     }
 
     private send = async (...val: HIDMsg[]) => await this.SendRawHID(...val);

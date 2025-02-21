@@ -49,20 +49,20 @@ export class TouchHandler {
             case 'short_right':
                 await this.SendFunc(
                     new HIDMsg(EventCode.md, {
-                        button: '2'
+                        button: 2
                     }),
                     new HIDMsg(EventCode.mu, {
-                        button: '2'
+                        button: 2
                     })
                 );
                 break;
             case 'short_left':
                 await this.SendFunc(
                     new HIDMsg(EventCode.md, {
-                        button: '0'
+                        button: 0
                     }),
                     new HIDMsg(EventCode.mu, {
-                        button: '0'
+                        button: 0
                     })
                 );
                 break;
