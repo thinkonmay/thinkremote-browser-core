@@ -265,6 +265,16 @@ export async function LogoutSteamOnVM(
     return resp instanceof Error ? resp : 'SUCCESS';
 }
 
+export async function ChangeTemplate(
+    address: string,
+    template: string,
+    volume_id: string
+): Promise<Error | 'success'> {
+    return await internalFetch<'success'>(address, 'reallocate', {
+        source: `${template}.template`,
+        id: volume_id
+    });
+}
 export async function MountOnVM(
     address: string,
     target: string,
