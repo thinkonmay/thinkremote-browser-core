@@ -140,18 +140,13 @@ class Thinkmay {
     }
 
     private async handleIncomingVideo(evt: RTCTrackEvent): Promise<void> {
-        if (this.closed) return;
-        Log(LogLevel.Infor, `Incoming ${evt.track.kind} stream`);
-        if (evt.track.kind != 'video') return;
-
         const stream = evt.streams.find(
             (val) => val.getVideoTracks().length > 0
         );
 
-        if (Number.isNaN(parseInt(stream.id))) return;
-
-        if (getBrowser() == 'Safari') {
-        } else {
+        if (this.closed) return;
+        else if (evt.track.kind != 'video') return;
+        else if (getBrowser() != 'Safari')
             try {
                 const frameStreams = (
                     evt.receiver as any
@@ -164,21 +159,19 @@ class Thinkmay {
                     )
                     .pipeTo(frameStreams.writable);
             } catch {}
-        }
+
+        Log(LogLevel.Warning, `Incoming ${evt.track.kind} stream ${stream.id}`);
         await this.video.assign(stream);
     }
 
     private async handleIncomingAudio(evt: RTCTrackEvent): Promise<void> {
-        if (this.closed) return;
-        Log(LogLevel.Infor, `Incoming ${evt.track.kind} stream`);
-        if (evt.track.kind != 'audio') return;
-
         const stream = evt.streams.find(
             (val) => val.getAudioTracks().length > 0
         );
 
-        if (getBrowser() == 'Safari') {
-        } else {
+        if (this.closed) return;
+        else if (evt.track.kind != 'audio') return;
+        else if (getBrowser() != 'Safari')
             try {
                 const frameStreams = (
                     evt.receiver as any
@@ -191,7 +184,8 @@ class Thinkmay {
                     )
                     .pipeTo(frameStreams.writable);
             } catch {}
-        }
+
+        Log(LogLevel.Infor, `Incoming ${evt.track.kind} stream`);
         await this.audio.assign(stream);
         await this.audio.play();
     }
