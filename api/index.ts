@@ -1,4 +1,3 @@
-import { Body, Client, getClient, ResponseType } from '@tauri-apps/api/http';
 import { Child, Command } from '@tauri-apps/api/shell';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -10,9 +9,6 @@ import {
     UserSession
 } from './database';
 
-let client: Client | null = null;
-const http_available = () =>
-    client != null || new URL(window.location.href).protocol == 'http:';
 export function ValidateIPaddress(ipaddress: string) {
     return ipaddress != undefined
         ? /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
@@ -20,90 +16,45 @@ export function ValidateIPaddress(ipaddress: string) {
           )
         : false;
 }
-const userHttp = (addr: string): boolean =>
-    http_available() && ValidateIPaddress(addr);
 
-getClient()
-    .then((x) => (client = x))
-    .catch((r) =>
-        console.log(
-            'You are not using on webbrowser, tauri API will be limited'
-        )
-    );
 async function internalFetch<T>(
     address: string,
     command: string,
     body?: any
 ): Promise<T | Error> {
-    const token = POCKETBASE.authStore.token;
-    const user = POCKETBASE.authStore.model?.id;
-    const url = userHttp(address)
-        ? `http://${address}/${command}`
-        : `https://${address}/${command}`;
-
     try {
-        if (client != null) {
-            if (command == 'info') {
-                const { data, ok } = await client.get<T>(url, {
-                    timeout: { secs: 3, nanos: 0 },
-                    headers: { Authorization: token, User: user },
-                    responseType: ResponseType.JSON
-                });
+        const token = POCKETBASE.authStore.token;
+        const user = POCKETBASE.authStore.model?.id;
+        const url = `https://${address}/${command}`;
 
-                if (!ok) return new Error('fail to request');
-
-                return data;
-            } else {
-                const { data, ok } = await client.post<T>(
-                    url,
-                    Body.json(body),
-                    {
-                        timeout: { secs: 60 * 60 * 24, nanos: 0 },
-                        headers: { Authorization: token, User: user },
-                        responseType: ResponseType.JSON
-                    }
+        if (command == 'info') {
+            const resp = await fetch(url, {
+                method: 'GET',
+                headers: { Authorization: token, User: user }
+            });
+            if (!resp.ok)
+                return new Error(
+                    `${(await resp.text()).replaceAll(
+                        `"`,
+                        ''
+                    )}. Send it to admin! `
                 );
-
-                if (!ok)
-                    return new Error(
-                        `${JSON.stringify(data)}. Send it to admin!`
-                    );
-
-                return data;
-            }
+            else return await resp.json();
         } else {
-            if (command == 'info') {
-                const resp = await fetch(url, {
-                    method: 'GET',
-                    headers: { Authorization: token, User: user }
-                });
-                if (!resp.ok)
-                    return new Error(
-                        `${JSON.stringify(
-                            await resp.text()
-                        )}. Send it to admin! `
-                    );
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { Authorization: token, User: user },
+                body: JSON.stringify(body)
+            });
 
-                return await resp.json();
-            } else {
-                const resp = await fetch(url, {
-                    method: 'POST',
-                    headers: { Authorization: token, User: user },
-                    body: JSON.stringify(body)
-                });
-
-                if (!resp.ok) {
-                    const msg = JSON.stringify(await resp.text());
-                    return new Error(`${msg}. Send it to admin!`);
-                }
-                const clonedResponse = resp.clone();
-
-                try {
-                    return await clonedResponse.json();
-                } catch (error) {
-                    return new Error(await resp.text());
-                }
-            }
+            if (!resp.ok)
+                return new Error(
+                    `${(await resp.text()).replaceAll(
+                        `"`,
+                        ''
+                    )}. Send it to admin!`
+                );
+            else return await resp.json();
         }
     } catch (err) {
         return new Error(err);
@@ -111,7 +62,10 @@ async function internalFetch<T>(
 }
 
 async function GetInfo(ip: string): Promise<Computer | Error> {
-    return await internalFetch<Computer>(ip, 'info');
+    const result = await internalFetch<Computer>(ip, 'info');
+    if (result instanceof Error)
+        return await internalFetch<Computer>(ip, 'info');
+    else return result;
 }
 
 type Volume = {
@@ -309,20 +263,12 @@ export function ParseRequest(
         id,
         thinkmay: { audio, video, data }
     } = session;
-    if (userHttp(address))
-        return {
-            logUrl: `http://${address}/log?target=${id}`,
-            videoUrl: `ws://${address}/broadcasters/webrtc?token=${video.token}&queue_size=4&mtu=1200`,
-            audioUrl: `ws://${address}/broadcasters/webrtc?token=${audio.token}&queue_size=4&mtu=1200`,
-            dataUrl: `ws://${address}/broadcasters/websocket?token=${data.token}&queue_size=4&mtu=1200`
-        };
-    else
-        return {
-            logUrl: `https://${address}/log?target=${id}`,
-            videoUrl: `wss://${address}/broadcasters/webrtc?token=${video.token}`,
-            audioUrl: `wss://${address}/broadcasters/webrtc?token=${audio.token}`,
-            dataUrl: `wss://${address}/broadcasters/websocket?token=${data.token}`
-        };
+    return {
+        logUrl: `https://${address}/log?target=${id}`,
+        videoUrl: `wss://${address}/broadcasters/webrtc?token=${video.token}`,
+        audioUrl: `wss://${address}/broadcasters/webrtc?token=${audio.token}`,
+        dataUrl: `wss://${address}/broadcasters/websocket?token=${data.token}`
+    };
 }
 
 type MoonlightStreamConfig = {
