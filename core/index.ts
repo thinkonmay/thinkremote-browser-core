@@ -162,6 +162,7 @@ class Thinkmay {
 
         Log(LogLevel.Warning, `Incoming ${evt.track.kind} stream ${stream.id}`);
         await this.video.assign(stream);
+        await this.video.play();
     }
 
     private async handleIncomingAudio(evt: RTCTrackEvent): Promise<void> {
@@ -427,7 +428,6 @@ class Thinkmay {
         }
 
         this.Metrics.video.status = 'connected';
-        await this.video.play();
     };
 
     private dataEstablishmentLoop = async () => {
