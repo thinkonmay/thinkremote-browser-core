@@ -32,7 +32,7 @@ export const GLOBAL = () =>
     );
 
 export function getDomainURL(): string {
-    return !window.location.origin.includes(THINKMAY_DOMAIN) || !window.location.origin.includes(THINKMAY_DEV_DOMAIN)
+    return !window.location.origin.includes(THINKMAY_DOMAIN) || window.location.origin.includes(THINKMAY_DEV_DOMAIN)
         ? 'https://play.thinkmay.net'
         : window.location.origin;
 }
