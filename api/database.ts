@@ -19,6 +19,7 @@ export enum CAUSE {
 }
 
 const THINKMAY_DOMAIN = 'thinkmay.net';
+const THINKMAY_DEV_DOMAIN = 'dev-thinkmay.netlify.app'
 export const RPOCKETBASE = (domain: string) =>
     new PocketBase(`https://${domain}`);
 export const POCKETBASE = new PocketBase(getDomainURL());
@@ -31,7 +32,7 @@ export const GLOBAL = () =>
     );
 
 export function getDomainURL(): string {
-    return !window.location.origin.includes(THINKMAY_DOMAIN)
+    return !window.location.origin.includes(THINKMAY_DOMAIN) || !window.location.origin.includes(THINKMAY_DEV_DOMAIN)
         ? 'https://play.thinkmay.net'
         : window.location.origin;
 }
