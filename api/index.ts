@@ -145,7 +145,6 @@ type RemoteCredential = {
     audioUrl: string;
     videoUrl: string;
     dataUrl: string;
-    logUrl: string;
 };
 
 export async function StartThinkmay(
@@ -260,11 +259,9 @@ export function ParseRequest(
     session: Session
 ): RemoteCredential | Error {
     const {
-        id,
         thinkmay: { audio, video, data }
     } = session;
     return {
-        logUrl: `https://${address}/log?target=${id}`,
         videoUrl: `wss://${address}/broadcasters/webrtc?token=${video.token}`,
         audioUrl: `wss://${address}/broadcasters/webrtc?token=${audio.token}`,
         dataUrl: `wss://${address}/broadcasters/websocket?token=${data.token}`
