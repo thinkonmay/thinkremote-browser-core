@@ -19,7 +19,10 @@ export enum CAUSE {
 }
 
 export function getFrontendURL(): string {
-    return 'https://play.2.thinkmay.net';
+    const address = localStorage.getItem('thinkmay_domain');
+    if (address == null) 
+        return 'https://play.2.thinkmay.net'
+    else return `https://${address}`
 }
 export const POCKETBASE = new PocketBase(getFrontendURL());
 export const GLOBAL = () =>
