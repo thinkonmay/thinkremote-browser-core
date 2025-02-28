@@ -132,13 +132,31 @@ export class HIDMsg {
                 return [
                     this.data.gid,
                     this.data.index,
-                    Math.round((this.data.val + 1) * 2 ** 31) - 1
+                    Math.round(
+                        ((this.data.val >= 1
+                            ? 0.999
+                            : this.data.val <= -1
+                                ? -0.999
+                                : this.data.val
+                        ) +
+                            1) *
+                            2 ** 31
+                    ) - 1
                 ];
             case EventCode.gs:
                 return [
                     this.data.gid,
                     this.data.index,
-                    Math.round((this.data.val + 1) * 2 ** 31) - 1
+                    Math.round(
+                        ((this.data.val >= 1
+                            ? 0.999 
+                            : this.data.val <= -1
+                                ? -0.999
+                                : this.data.val
+                        ) +
+                            1) *
+                            2 ** 31
+                    ) - 1
                 ];
             default:
                 return [];
