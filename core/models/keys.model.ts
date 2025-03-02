@@ -136,9 +136,8 @@ export class HIDMsg {
                         ((this.data.val >= 1
                             ? 0.999
                             : this.data.val <= -1
-                                ? -0.999
-                                : this.data.val
-                        ) +
+                              ? -0.999
+                              : this.data.val) +
                             1) *
                             2 ** 31
                     ) - 1
@@ -149,11 +148,10 @@ export class HIDMsg {
                     this.data.index,
                     Math.round(
                         ((this.data.val >= 1
-                            ? 0.999 
+                            ? 0.999
                             : this.data.val <= -1
-                                ? -0.999
-                                : this.data.val
-                        ) +
+                              ? -0.999
+                              : this.data.val) +
                             1) *
                             2 ** 31
                     ) - 1
