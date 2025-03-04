@@ -129,7 +129,8 @@ export class MediaRTC {
     }
 
     private async handleIncomingPacket(ev: MessageEvent) {
-        const { event, data } = JSON.parse(ev.data) as {
+        const txt = await (ev.data as Blob).text()
+        const { event, data } = JSON.parse(txt) as {
             event: string;
             data: any;
         };

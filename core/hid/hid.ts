@@ -131,8 +131,8 @@ export class HID {
         this.shortcuts = new Array<Shortcut>();
     }
 
-    public handleIncomingData(data: string) {
-        const buff = new TextEncoder().encode(data);
+    public async handleIncomingData(data: Blob) {
+        const buff = await data.bytes()
         switch (buff.at(0)) {
             case EventCode.grum:
                 const weakMagnitude = buff[2] / 255;
@@ -150,7 +150,8 @@ export class HID {
                 });
                 break;
             case EventCode.noti:
-                Log(LogLevel.Warning, data.slice(1));
+                const str = await data.text()
+                Log(LogLevel.Warning, str.slice(1));
             default:
                 break;
         }
