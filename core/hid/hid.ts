@@ -152,6 +152,9 @@ export class HID {
                 break;
             case EventCode.noti:
                 Log(LogLevel.Warning, data.slice(1));
+                break;
+            case EventCode.ping:
+                break;
         }
     }
 
