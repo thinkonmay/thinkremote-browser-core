@@ -20,7 +20,8 @@ export enum EventCode {
     grum,
 
     cs,
-    noti
+    noti,
+    ping
 }
 
 export enum ShortcutCode {

@@ -6,6 +6,7 @@ export class DataRTC {
 
     private closeHandler: () => void;
     private ws: WebSocket;
+    private ping: any;
 
     constructor(
         url: string,
@@ -23,10 +24,13 @@ export class DataRTC {
             this.ws.onclose = this.Close.bind(this);
             this.ws.onmessage = (e) => messageHandler(e.data);
         };
+
+        this.ping = setInterval(() => this.Send(EventCode.ping),1000)
     }
 
     public Close() {
         this.closed = true;
+        clearInterval(this.ping)
 
         const close = this.closeHandler;
         this.closeHandler = () => {};
