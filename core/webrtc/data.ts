@@ -10,7 +10,7 @@ export class DataRTC {
     constructor(
         url: string,
         closeHandler: () => void,
-        messageHandler: (data: any) => void
+        messageHandler: (data: Blob) => void
     ) {
         this.closed = false;
         this.closeHandler = closeHandler;
