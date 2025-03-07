@@ -4,6 +4,11 @@ import { EventCode, HIDMsg } from '../models/keys.model';
 const RADIUS = 50;
 const BOTTOM_THRESHOLD_PERCENT = 100;
 const MOUSE_SPEED = 3.5;
+
+enum Event {
+    short_left,
+    short_right
+}
 export class TouchHandler {
     private onGoingTouchs: Map<number, TouchData>;
     public mode: 'trackpad' | 'none';
@@ -43,10 +48,10 @@ export class TouchHandler {
         this.mode = 'none';
     }
 
-    private async ListenEvents(events: string) {
+    private async ListenEvents(events: Event) {
         if (this.mode == 'none') return;
         switch (events) {
-            case 'short_right':
+            case Event.short_right:
                 await this.SendFunc(
                     new HIDMsg(EventCode.md, {
                         button: 2
@@ -56,7 +61,7 @@ export class TouchHandler {
                     })
                 );
                 break;
-            case 'short_left':
+            case Event.short_left:
                 await this.SendFunc(
                     new HIDMsg(EventCode.md, {
                         button: 0
@@ -93,7 +98,6 @@ export class TouchHandler {
 
             const validtouch = () => {
                 return (
-                    new Date().getTime() - touch.startTime.getTime() < 150 && // quick touch
                     Math.sqrt(
                         (touch.clientX - touch.touchStart.clientX) ** 2 +
                             (touch.clientY - touch.touchStart.clientY) ** 2
@@ -104,7 +108,9 @@ export class TouchHandler {
             if (touch == undefined) continue;
             if (this.mode == 'trackpad' && validtouch())
                 await this.ListenEvents(
-                    this.isTouchRight(touch) ? 'short_right' : 'short_left'
+                    this.isTouchRight(touch)
+                        ? Event.short_right
+                        : Event.short_left
                 );
 
             this.onGoingTouchs.delete(key);
