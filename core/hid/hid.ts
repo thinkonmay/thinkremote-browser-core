@@ -167,10 +167,7 @@ export class HID {
             for (let index = 0; index < buttons.length; index++) {
                 const { pressed, value } = buttons[index];
                 if (index == 6 || index == 7) {
-                    if (
-                        Math.abs(this.prev_sliders.get(index) - value) <
-                        0.000001
-                    )
+                    if ( this.prev_sliders.get(index) == value)
                         continue;
                     await this.SendFunc(
                         new HIDMsg(EventCode.gs, {
@@ -194,24 +191,17 @@ export class HID {
                     this.last_interact = new Date();
                 }
             }
-            for (let index = 0; index < axes.length; index++) {
-                const value = axes[index];
-                if (Math.abs(this.prev_axis.get(index) - value) < 0.000001)
-                    continue;
 
+            for (let index = 0; index < axes.length; index++) 
                 await this.SendFunc(
                     new HIDMsg(EventCode.ga, {
                         index: index,
-                        val: value
+                        val: axes[index]
                     })
                 );
-
-                this.prev_axis.set(index, value);
-                this.last_interact = new Date();
-            }
         }
 
-        return gamepads.length == 0 ? 1000 : this.last_interact != last ? 0 : 5;
+        return gamepads.length == 0 ? 1000 : this.last_interact != last ? 0 : 10;
     }
 
     public async ResetKeyStuck() {
