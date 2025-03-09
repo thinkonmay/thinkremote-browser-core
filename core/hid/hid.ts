@@ -159,7 +159,6 @@ export class HID {
     }
 
     private async runGamepad(): Promise<number> {
-        const last = this.last_interact;
         const gamepads = navigator.getGamepads().filter((x) => x != null);
         for (let gamepad_id = 0; gamepad_id < gamepads.length; gamepad_id++) {
             const { buttons, axes } = gamepads[gamepad_id];
@@ -167,8 +166,7 @@ export class HID {
             for (let index = 0; index < buttons.length; index++) {
                 const { pressed, value } = buttons[index];
                 if (index == 6 || index == 7) {
-                    if ( this.prev_sliders.get(index) == value)
-                        continue;
+                    if (this.prev_sliders.get(index) == value) continue;
                     await this.SendFunc(
                         new HIDMsg(EventCode.gs, {
                             index: index,
@@ -192,7 +190,7 @@ export class HID {
                 }
             }
 
-            for (let index = 0; index < axes.length; index++) 
+            for (let index = 0; index < axes.length; index++)
                 await this.SendFunc(
                     new HIDMsg(EventCode.ga, {
                         index: index,
@@ -201,7 +199,7 @@ export class HID {
                 );
         }
 
-        return gamepads.length == 0 ? 1000 : this.last_interact != last ? 0 : 10;
+        return gamepads.length == 0 ? 1000 : 10;
     }
 
     public async ResetKeyStuck() {
