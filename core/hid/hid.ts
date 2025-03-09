@@ -199,7 +199,7 @@ export class HID {
                 );
         }
 
-        return gamepads.length == 0 ? 1000 : 10;
+        return gamepads.length == 0 ? 1000 : 30;
     }
 
     public async ResetKeyStuck() {
