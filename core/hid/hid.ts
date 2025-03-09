@@ -102,7 +102,7 @@ export class HID {
                 let wait_period = 10;
                 try {
                     wait_period = await this.runGamepad();
-                } catch {}
+                } catch { }
                 if (wait_period > 0)
                     await new Promise((r) => setTimeout(r, wait_period));
             }
@@ -110,10 +110,10 @@ export class HID {
         this.intervals.push(
             setInterval(
                 () =>
-                    (this.relativeMouse =
-                        document.pointerLockElement != null ||
-                        (document as any).mozPointerLockElement != null ||
-                        (document as any).webkitPointerLockElement != null),
+                (this.relativeMouse =
+                    document.pointerLockElement != null ||
+                    (document as any).mozPointerLockElement != null ||
+                    (document as any).webkitPointerLockElement != null),
                 100
             )
         );
@@ -160,38 +160,30 @@ export class HID {
 
     private async runGamepad(): Promise<number> {
         const gamepads = navigator.getGamepads().filter((x) => x != null);
+        const msg: HIDMsg[] = []
         for (let gamepad_id = 0; gamepad_id < gamepads.length; gamepad_id++) {
             const { buttons, axes } = gamepads[gamepad_id];
 
             for (let index = 0; index < buttons.length; index++) {
                 const { pressed, value } = buttons[index];
-                if (index == 6 || index == 7) {
-                    if (this.prev_sliders.get(index) == value) continue;
-                    await this.SendFunc(
+                if (index == 6 || index == 7)
+                    msg.push(
                         new HIDMsg(EventCode.gs, {
                             index: index,
                             val: value
                         })
                     );
-
-                    this.prev_sliders.set(index, value);
-                    this.last_interact = new Date();
-                } else {
-                    if (this.prev_buttons.get(index) == pressed) continue;
-                    await this.SendFunc(
+                else
+                    msg.push(
                         new HIDMsg(EventCode.gb, {
                             index: index,
                             val: pressed ? 1 : 0
                         })
-                    );
-
-                    this.prev_buttons.set(index, pressed);
-                    this.last_interact = new Date();
-                }
+                    )
             }
 
             for (let index = 0; index < axes.length; index++)
-                await this.SendFunc(
+                msg.push(
                     new HIDMsg(EventCode.ga, {
                         index: index,
                         val: axes[index]
@@ -199,6 +191,7 @@ export class HID {
                 );
         }
 
+        await this.SendFunc(...msg)
         return gamepads.length == 0 ? 1000 : 30;
     }
 
@@ -324,6 +317,6 @@ export class HID {
             if ('keyboard' in navigator && 'lock' in navigator.keyboard)
                 document.onfullscreenchange = block;
             else document.onfullscreenchange = null;
-        } catch {}
+        } catch { }
     }
 }
