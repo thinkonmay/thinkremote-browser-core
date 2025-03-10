@@ -102,7 +102,7 @@ export class HID {
                 let wait_period = 10;
                 try {
                     wait_period = await this.runGamepad();
-                } catch { }
+                } catch {}
                 if (wait_period > 0)
                     await new Promise((r) => setTimeout(r, wait_period));
             }
@@ -110,10 +110,10 @@ export class HID {
         this.intervals.push(
             setInterval(
                 () =>
-                (this.relativeMouse =
-                    document.pointerLockElement != null ||
-                    (document as any).mozPointerLockElement != null ||
-                    (document as any).webkitPointerLockElement != null),
+                    (this.relativeMouse =
+                        document.pointerLockElement != null ||
+                        (document as any).mozPointerLockElement != null ||
+                        (document as any).webkitPointerLockElement != null),
                 100
             )
         );
@@ -160,7 +160,7 @@ export class HID {
 
     private async runGamepad(): Promise<number> {
         const gamepads = navigator.getGamepads().filter((x) => x != null);
-        const msg: HIDMsg[] = []
+        const msg: HIDMsg[] = [];
         for (let gamepad_id = 0; gamepad_id < gamepads.length; gamepad_id++) {
             const { buttons, axes } = gamepads[gamepad_id];
 
@@ -179,7 +179,7 @@ export class HID {
                             index: index,
                             val: pressed ? 1 : 0
                         })
-                    )
+                    );
             }
 
             for (let index = 0; index < axes.length; index++)
@@ -191,7 +191,7 @@ export class HID {
                 );
         }
 
-        await this.SendFunc(...msg)
+        await this.SendFunc(...msg);
         return gamepads.length == 0 ? 1000 : 30;
     }
 
@@ -317,6 +317,6 @@ export class HID {
             if ('keyboard' in navigator && 'lock' in navigator.keyboard)
                 document.onfullscreenchange = block;
             else document.onfullscreenchange = null;
-        } catch { }
+        } catch {}
     }
 }
