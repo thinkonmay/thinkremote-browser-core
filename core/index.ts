@@ -257,64 +257,7 @@ class Thinkmay {
         await this.SendRawHID(new HIDMsg(EventCode.cs, { val }));
     }
 
-    public async VirtualGamepadButton(isDown: boolean, index: number) {
-        const is_slider = index == 6 || index == 7;
-        await this.SendRawHID(
-            new HIDMsg(
-                is_slider ? EventCode.gs : EventCode.gb,
-                is_slider
-                    ? {
-                          gid: this.gid,
-                          index: index,
-                          val: !isDown ? 0 : 1
-                      }
-                    : {
-                          gid: this.gid,
-                          index: index,
-                          val: !isDown ? 0 : 1
-                      }
-            )
-        );
-    }
-
-    public async VirtualGamepadAxis(x: number, y: number, type: AxisType) {
-        let axisx, axisy: number;
-        switch (type) {
-            case 'left':
-                axisx = 0;
-                axisy = 1;
-                break;
-            case 'right':
-                axisx = 2;
-                axisy = 3;
-                break;
-        }
-
-        await this.SendRawHID(
-            new HIDMsg(EventCode.ga, {
-                gid: this.gid,
-                index: axisx,
-                val: x
-            }),
-            new HIDMsg(EventCode.ga, {
-                gid: this.gid,
-                index: axisy,
-                val: y
-            })
-        );
-    }
-
-    public async VirtualKeyboard(
-        ...keys: { code: EventCode; jsKey: string }[]
-    ) {
-        return await this.SendRawHID(
-            ...keys.map(
-                (x) => new HIDMsg(x.code, { key: convertJSKey(x.jsKey, 0) })
-            )
-        );
-    }
-
-    private send = async (...val: HIDMsg[]) => await this.SendRawHID(...val);
+    private send = (...val: HIDMsg[]) => this.SendRawHID(...val);
 
     private handle_metrics = (val: RTCMetric) => {
         const now = new Date();
@@ -440,27 +383,61 @@ class Thinkmay {
         );
     };
 
-    public async MouseButtonDown(event: { button: number }) {
-        await this.SendRawHID(
+    public MouseButtonDown = (event: { button: number }) =>
+        this.SendRawHID(
             new HIDMsg(EventCode.md, {
                 button: event.button
             })
         );
-    }
-    public async MouseButtonUp(event: { button: number }) {
-        await this.SendRawHID(
+    public MouseButtonUp = (event: { button: number }) =>
+        this.SendRawHID(
             new HIDMsg(EventCode.mu, {
                 button: event.button
             })
         );
-    }
-    public async MouseWheel(event: { deltaY: number }) {
-        await this.SendRawHID(
+    public MouseWheel = (event: { deltaY: number }) =>
+        this.SendRawHID(
             new HIDMsg(EventCode.mw, {
                 deltaY: -Math.round(event.deltaY)
             })
         );
-    }
+    public VirtualGamepadAxis = (x: number, y: number, isRight?: boolean) =>
+        this.SendRawHID(
+            new HIDMsg(EventCode.ga, {
+                gid: this.gid,
+                index: isRight ? 2 : 0,
+                val: x
+            }),
+            new HIDMsg(EventCode.ga, {
+                gid: this.gid,
+                index: isRight ? 3 : 1,
+                val: y
+            })
+        );
+    public VirtualKeyboard = (...keys: { code: EventCode; jsKey: string }[]) =>
+        this.SendRawHID(
+            ...keys.map(
+                (x) => new HIDMsg(x.code, { key: convertJSKey(x.jsKey, 0) })
+            )
+        );
+    public VirtualGamepadButton = (isDown: boolean, index: number) =>
+        this.SendRawHID(
+            new HIDMsg(
+                index == 6 || index == 7 ? EventCode.gs : EventCode.gb,
+                index == 6 || index == 7
+                    ? {
+                          gid: this.gid,
+                          index: index,
+                          val: !isDown ? 0 : 1
+                      }
+                    : {
+                          gid: this.gid,
+                          index: index,
+                          val: !isDown ? 0 : 1
+                      }
+            )
+        );
+
     public Close() {
         this.closed = true;
         clearTimeout(this.missing_frame);

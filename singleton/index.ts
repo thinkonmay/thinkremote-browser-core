@@ -1,7 +1,7 @@
 import { EventCode, RemoteDesktopClient } from '../core';
 
 export const SIZE = () =>
-    CLIENT != null
+    CLIENT
         ? CLIENT.video.internal().videoHeight *
           CLIENT.video.internal().videoWidth
         : 1920 * 1080;
@@ -13,23 +13,16 @@ export const MIN_BITRATE = () => Math.round((500 / (1920 * 1080)) * SIZE());
 export const MAX_FRAMERATE = 120; //240
 export const MIN_FRAMERATE = 40;
 
-export let CLIENT: RemoteDesktopClient | null = null;
+export let CLIENT: RemoteDesktopClient | undefined = undefined;
 export const Assign = (client: RemoteDesktopClient) => {
-    if (CLIENT != null) CLIENT.Close();
+    if (CLIENT) CLIENT.Close();
     CLIENT = client;
-};
-
-export let PINGER = async (): Promise<number> => {
-    return -999;
-};
-export const SetPinger = (fun: () => Promise<number>) => {
-    PINGER = fun;
 };
 
 export const ready = async (): Promise<boolean> => {
     const now = () => new Date().getTime() / 1000;
     const start = now();
-    while (CLIENT == null || !CLIENT.ready()) {
+    while (CLIENT == undefined || !CLIENT.ready()) {
         await new Promise((r) => setTimeout(r, 1000));
         if (now() - start > 10 * 60) return false;
     }
@@ -37,38 +30,26 @@ export const ready = async (): Promise<boolean> => {
     return true;
 };
 
-export async function keyboard(
-    ...vals: { val: string; action: 'up' | 'down' }[]
-) {
-    await CLIENT?.VirtualKeyboard(
-        ...vals.map(({ action, val }) => ({
-            code: action == 'up' ? EventCode.ku : EventCode.kd,
+export async function gamepadButton(index: number, isDown?: boolean) {
+    CLIENT?.VirtualGamepadButton(isDown, index);
+    if ('vibrate' in navigator && isDown) navigator.vibrate([40, 30, 0]);
+}
+
+export const virtMouseWheel = (deltaY: number) =>
+    CLIENT?.MouseWheel({ deltaY });
+
+export const virtMouse = (button: number, isDown?: boolean) =>
+    (isDown
+        ? CLIENT?.MouseButtonDown.bind(CLIENT)
+        : CLIENT?.MouseButtonUp.bind(CLIENT))({ button });
+
+export const gamepadAxis = (x: number, y: number, isRight?: boolean) =>
+    CLIENT?.VirtualGamepadAxis(x, y, isRight);
+
+export const keyboard = (...vals: { val: string; isDown?: boolean }[]) =>
+    CLIENT?.VirtualKeyboard(
+        ...vals.map(({ isDown, val }) => ({
+            code: !isDown ? EventCode.ku : EventCode.kd,
             jsKey: val
         }))
     );
-}
-
-export async function virtMouse(button, action: 'up' | 'down') {
-    if (action == 'down') {
-        await CLIENT.MouseButtonDown({ button });
-    } else if (action == 'up') {
-        await CLIENT.MouseButtonUp({ button });
-    }
-}
-
-export async function virtMouseWheel(deltaY) {
-    await CLIENT.MouseWheel({ deltaY });
-}
-export async function gamepadButton(index: number, type: 'up' | 'down') {
-    if ('vibrate' in navigator && type == 'down')
-        navigator.vibrate([40, 30, 0]);
-    await CLIENT?.VirtualGamepadButton(type == 'down', index);
-}
-
-export async function gamepadAxis(
-    x: number,
-    y: number,
-    type: 'left' | 'right'
-) {
-    await CLIENT?.VirtualGamepadAxis(x, y, type);
-}
