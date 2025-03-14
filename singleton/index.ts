@@ -49,7 +49,9 @@ export const gamepadAxis = (x: number, y: number, isRight?: boolean) =>
 export const keyboard = (...vals: { val: string; isDown?: boolean }[]) =>
     CLIENT?.VirtualKeyboard(
         ...vals.map(({ isDown, val }) => ({
-            code: (!isDown ? EventCode.ku : EventCode.kd) + (CLIENT?.hid.scancode ? 2 : 0),
+            code:
+                (!isDown ? EventCode.ku : EventCode.kd) +
+                (CLIENT?.hid.scancode ? 2 : 0),
             jsKey: val
         }))
     );

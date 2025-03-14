@@ -140,8 +140,12 @@ export class HID {
                 const strongMagnitude = buff[3] / 255;
                 const duration = 1000;
 
-                if (strongMagnitude > 0 || weakMagnitude > 0)
+                if (
+                    (strongMagnitude > 0 || weakMagnitude > 0) &&
+                    navigator.getGamepads().length == 0
+                )
                     navigator.vibrate?.(duration);
+
                 navigator.getGamepads().forEach((gamepad: Gamepad | null) => {
                     gamepad?.vibrationActuator?.playEffect('dual-rumble', {
                         duration,
