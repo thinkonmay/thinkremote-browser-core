@@ -256,13 +256,24 @@ export async function UnmountOnVM(
 
 export function ParseRequest(
     address: string,
-    session: Session
+    session: Session,
+    option?: {
+        high_queue?: boolean;
+        high_mtu?: boolean;
+    }
 ): RemoteCredential | Error {
     const {
         thinkmay: { audio, video, data }
     } = session;
+    const { high_queue, high_mtu } = option ?? {
+        high_mtu: false,
+        high_queue: true
+    };
+    const opt = `&queue_size=${high_queue ? 16 : 4}&mtu=${
+        high_mtu ? 1400 : 1200
+    }`;
     return {
-        videoUrl: `wss://${address}/broadcasters/webrtc?token=${video.token}`,
+        videoUrl: `wss://${address}/broadcasters/webrtc?token=${video.token}${opt}`,
         audioUrl: `wss://${address}/broadcasters/webrtc?token=${audio.token}`,
         dataUrl: `wss://${address}/broadcasters/websocket?token=${data.token}`
     };
