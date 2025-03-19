@@ -23,8 +23,8 @@ async function internalFetch<T>(
     body?: any
 ): Promise<T | Error> {
     try {
-        const token = POCKETBASE.authStore.token;
-        const user = POCKETBASE.authStore.model?.id;
+        const token = POCKETBASE().authStore.token;
+        const user = POCKETBASE().authStore.model?.id;
         const url = `https://${address}/${command}`;
 
         if (command == 'info') {

@@ -23,7 +23,7 @@ export function getFrontendURL(): string {
     if (address == null) return 'https://play.2.thinkmay.net';
     else return `https://${address}`;
 }
-export const POCKETBASE = new PocketBase(getFrontendURL());
+export const POCKETBASE = () => new PocketBase(getFrontendURL());
 export const GLOBAL = () =>
     createClient(
         'https://play.thinkmay.net',
