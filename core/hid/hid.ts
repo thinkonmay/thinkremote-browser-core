@@ -134,7 +134,7 @@ export class HID {
     public async handleIncomingData(blob: Blob) {
         const data = await blob.text();
         const buff = new TextEncoder().encode(data);
-        switch (buff.at(0)) {
+        switch (buff[0]) {
             case EventCode.grum:
                 const weakMagnitude = buff[2] / 255;
                 const strongMagnitude = buff[3] / 255;
