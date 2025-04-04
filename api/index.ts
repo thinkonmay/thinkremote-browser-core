@@ -273,9 +273,9 @@ export function ParseRequest(
         high_mtu ? 1400 : 1200
     }`;
     return {
-        videoUrl: `wss://${address}/broadcasters/webrtc?token=${video.token}${opt}`,
-        audioUrl: `wss://${address}/broadcasters/webrtc?token=${audio.token}`,
-        dataUrl: `wss://${address}/broadcasters/websocket?token=${data.token}`
+        videoUrl: `wss://${address}:444/broadcasters/webrtc?token=${video.token}${opt}`,
+        audioUrl: `wss://${address}:444/broadcasters/webrtc?token=${audio.token}`,
+        dataUrl: `wss://${address}:444/broadcasters/websocket?token=${data.token}`
     };
 }
 

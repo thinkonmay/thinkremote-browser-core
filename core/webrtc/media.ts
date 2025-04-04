@@ -102,7 +102,7 @@ export class MediaRTC {
         this.ws.onerror = this.Close.bind(this);
         this.ws.onclose = this.Close.bind(this);
         this.ws.onopen = () => {
-            this.sendHandler = (data) => this.ws.send(JSON.stringify(data));
+            this.sendHandler = (data) => this.ws.send(new Blob([JSON.stringify(data)], { type: 'text/plain'           }));
             this.ws.onmessage = (ev) =>
                 this.handleIncomingPacket
                     .bind(this)(ev)
