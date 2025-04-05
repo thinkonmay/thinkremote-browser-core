@@ -106,7 +106,7 @@ export class MediaRTC {
             this.ws.onmessage = (ev) =>
                 this.handleIncomingPacket
                     .bind(this)(ev)
-                    .catch(() => {});
+                    .catch(console.log);
         };
     }
 
