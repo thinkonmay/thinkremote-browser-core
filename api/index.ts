@@ -17,11 +17,21 @@ export function ValidateIPaddress(ipaddress: string) {
         : false;
 }
 
+export class APIError {
+    code: number;
+    message: string;
+
+    constructor(message?: string, code?: number) {
+        this.message = message ?? 'Unknown error';
+        this.code = code ?? 500;
+    }
+}
+
 async function internalFetch<T>(
     address: string,
     command: string,
     body?: any
-): Promise<T | Error> {
+): Promise<T | APIError> {
     try {
         const token = POCKETBASE().authStore.token;
         const user = POCKETBASE().authStore.model?.id;
@@ -32,14 +42,13 @@ async function internalFetch<T>(
                 method: 'GET',
                 headers: { Authorization: token, User: user }
             });
+            const respbody = await resp.json();
             if (!resp.ok)
-                return new Error(
-                    `${(await resp.text()).replaceAll(
-                        `"`,
-                        ''
-                    )}. Send it to admin! `
+                return new APIError(
+                    respbody.message ?? 'Unknown error',
+                    respbody.code ?? 500
                 );
-            else return await resp.json();
+            else return respbody as T;
         } else {
             const resp = await fetch(url, {
                 method: 'POST',
@@ -47,23 +56,22 @@ async function internalFetch<T>(
                 body: JSON.stringify(body)
             });
 
+            const respbody = await resp.json();
             if (!resp.ok)
-                return new Error(
-                    `${(await resp.text()).replaceAll(
-                        `"`,
-                        ''
-                    )}. Send it to admin!`
+                return new APIError(
+                    respbody.message ?? 'Unknown error',
+                    respbody.code ?? 500
                 );
-            else return await resp.json();
+            else return respbody as T;
         }
     } catch (err) {
-        return new Error(err);
+        return new APIError('Unable to call request to server', 500);
     }
 }
 
-async function GetInfo(ip: string): Promise<Computer | Error> {
+async function GetInfo(ip: string): Promise<Computer | APIError> {
     const result = await internalFetch<Computer>(ip, 'info');
-    if (result instanceof Error)
+    if (result instanceof APIError)
         return await internalFetch<Computer>(ip, 'info');
     else return result;
 }
@@ -151,7 +159,7 @@ export async function StartThinkmay(
     address: string,
     vm_request?: Computer,
     showStatus?: (status: string) => Promise<void>
-): Promise<Computer | Error> {
+): Promise<Computer | APIError> {
     const req = {
         id: uuidv4(),
         thinkmay: {
@@ -173,19 +181,19 @@ export async function StartThinkmay(
                     '_new',
                     _req
                 );
-                if (!(request_new instanceof Error)) {
+                if (!(request_new instanceof APIError)) {
                     showStatus(request_new.status);
                     await new Promise((r) => setTimeout(r, 1000));
                 }
             }
         })(req);
 
-    let resp: Error | Computer = new Error('unable to request');
+    let resp: APIError | Computer = new APIError('unable to request', 500);
     try {
         resp = await internalFetch<Computer>(address, 'new', req);
     } catch (err) {
         running = false;
-        return new Error(err);
+        return resp;
     }
     running = false;
     return resp;
@@ -196,7 +204,7 @@ export async function LoginSteamOnVM(
     target: string,
     username: string,
     password: string
-): Promise<Computer | Error> {
+): Promise<Computer | APIError> {
     const id = uuidv4();
     const req: Session = {
         id,
@@ -213,16 +221,16 @@ export async function LoginSteamOnVM(
 export async function LogoutSteamOnVM(
     address: string,
     req: Session
-): Promise<'SUCCESS' | Error> {
+): Promise<'SUCCESS' | APIError> {
     const resp = await internalFetch<Session>(address, 'closed', req);
-    return resp instanceof Error ? resp : 'SUCCESS';
+    return resp instanceof APIError ? resp : 'SUCCESS';
 }
 
 export async function ChangeTemplate(
     address: string,
     template: string,
     volume_id: string
-): Promise<Error | 'success'> {
+): Promise<'success' | APIError> {
     return await internalFetch<'success'>(address, 'reallocate', {
         source: `${template}.template`,
         id: volume_id
@@ -232,7 +240,7 @@ export async function MountOnVM(
     address: string,
     target: string,
     bucket_name: string
-): Promise<Computer | Error> {
+): Promise<Computer | APIError> {
     const id = uuidv4();
     const req: Session = {
         id,
@@ -248,10 +256,10 @@ export async function MountOnVM(
 export async function UnmountOnVM(
     address: string,
     req: Session
-): Promise<'SUCCESS' | Error> {
-    if (address == undefined) return new Error('address is not defined');
+): Promise<'SUCCESS' | APIError> {
+    if (address == undefined) return new APIError('address is not defined');
     const resp = await internalFetch<Session>(address, 'closed', req);
-    return resp instanceof Error ? resp : 'SUCCESS';
+    return resp instanceof APIError ? resp : 'SUCCESS';
 }
 
 export function ParseRequest(
@@ -261,7 +269,7 @@ export function ParseRequest(
         high_queue?: boolean;
         high_mtu?: boolean;
     }
-): RemoteCredential | Error {
+): RemoteCredential {
     const {
         thinkmay: { audio, video, data }
     } = session;
@@ -303,7 +311,7 @@ export async function StartMoonlight(
     };
 
     const resp = await internalFetch<Session>(address, 'new', req);
-    if (resp instanceof Error) throw resp;
+    if (resp instanceof APIError) throw resp;
 
     const { username, password } = sunshine;
     const cmds = [
@@ -337,7 +345,7 @@ export async function StartMoonlight(
 export async function CloseSession(
     address: string,
     req: Session
-): Promise<Error | Computer> {
+): Promise<Computer | APIError> {
     return internalFetch<Computer>(address, 'closed', req);
 }
 
