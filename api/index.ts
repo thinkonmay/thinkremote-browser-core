@@ -36,13 +36,18 @@ async function internalFetch<T>(
         const token = POCKETBASE().authStore.token;
         const user = POCKETBASE().authStore.model?.id;
         const url = `https://${address}/${command}`;
+        let respbody = undefined;
 
         if (command == 'info') {
             const resp = await fetch(url, {
                 method: 'GET',
                 headers: { Authorization: token, User: user }
             });
-            const respbody = await resp.json();
+            try {
+                respbody = await resp.json();
+            } catch {
+                return new APIError(await resp.text(), 0);
+            }
             if (!resp.ok)
                 return new APIError(
                     respbody.message ?? 'Unknown error',
@@ -56,7 +61,11 @@ async function internalFetch<T>(
                 body: JSON.stringify(body)
             });
 
-            const respbody = await resp.json();
+            try {
+                respbody = await resp.json();
+            } catch {
+                return new APIError(await resp.text(), 0);
+            }
             if (!resp.ok)
                 return new APIError(
                     respbody.message ?? 'Unknown error',
