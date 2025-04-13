@@ -235,6 +235,13 @@ export async function LogoutSteamOnVM(
     return resp instanceof APIError ? resp : 'SUCCESS';
 }
 
+export async function ChangeNode(
+    address: string,
+    id: string,
+    node: string,
+): Promise<'success' | APIError> {
+    return await internalFetch<'success'>(address, 'transport', {id,node });
+}
 export async function ChangeTemplate(
     address: string,
     template: string,
