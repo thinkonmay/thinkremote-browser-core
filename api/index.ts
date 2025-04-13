@@ -237,10 +237,10 @@ export async function LogoutSteamOnVM(
 
 export async function ChangeNode(
     address: string,
-    id: string,
     node: string,
+    id: string
 ): Promise<'success' | APIError> {
-    return await internalFetch<'success'>(address, 'transport', {id,node });
+    return await internalFetch<'success'>(address, 'transport', { id, node });
 }
 export async function ChangeTemplate(
     address: string,
