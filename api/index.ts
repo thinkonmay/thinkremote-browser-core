@@ -8,7 +8,6 @@ import {
     UserEvents,
     UserSession
 } from './database';
-import { formatError } from '../../src/backend/utils/formatErr';
 
 export function ValidateIPaddress(ipaddress: string) {
     return ipaddress != undefined
@@ -51,7 +50,7 @@ async function internalFetch<T>(
             }
             if (!resp.ok) {
                 return new APIError(
-                    formatError(respbody) ?? 'Unknown error',
+                    respbody.message ?? 'Unknown error',
                     respbody.code ?? 500
                 );
             } else return respbody as T;
@@ -69,7 +68,7 @@ async function internalFetch<T>(
             }
             if (!resp.ok)
                 return new APIError(
-                    formatError(respbody) ?? 'Unknown error',
+                    respbody.message ?? 'Unknown error',
                     respbody.code ?? 500
                 );
             else return respbody as T;
