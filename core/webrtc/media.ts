@@ -72,6 +72,7 @@ export class MediaRTC {
     private host: string;
     private pending_ices: RTCIceCandidateInit[];
     private has_rsdp: boolean;
+    private microphone: boolean;
 
     private rtrackHandler: (a: RTCTrackEvent) => any;
     private metricHandler: (val: RTCMetric) => void;
@@ -82,12 +83,14 @@ export class MediaRTC {
         url: string,
         TrackHandler: (a: RTCTrackEvent) => Promise<void>,
         MetricsHandler: (val: RTCMetric) => void,
-        CloseHandler: () => void
+        CloseHandler: () => void,
+        microphone?: boolean
     ) {
         this.closed = false;
         this.connected = false;
         this.pending_ices = [];
         this.has_rsdp = false;
+        this.microphone = microphone ?? false;
         this.metricHandler = MetricsHandler;
         this.closeHandler = CloseHandler;
         this.rtrackHandler = TrackHandler;
@@ -174,6 +177,39 @@ export class MediaRTC {
         }
     }
 
+    private async AddLocalTrack() {
+        // Handles being called several times to update labels. Preserve values.
+        let stream: MediaStream = null;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                audio: true
+            });
+        } catch {
+            return;
+        }
+
+        const audioTracks = stream.getAudioTracks();
+        if (audioTracks.length == 0) 
+            return;
+
+        const [track] = audioTracks
+        const tracks = stream.getTracks();
+        tracks.forEach((track) => this.Conn.addTrack(track, stream));
+        const transceiver = this.Conn.getTransceivers().find(
+            (t) => t?.sender?.track === track
+        );
+
+        const codec = {
+            clockRate: 48000,
+            channels: 2,
+            mimeType: 'audio/opus'
+        };
+
+        const { codecs } = RTCRtpSender.getCapabilities('audio');
+        const selected = codecs.find((x) => x.mimeType == codec.mimeType);
+        transceiver.setCodecPreferences([selected]);
+    }
+
     private async setupConnection(config: RTCConfiguration) {
         this.Conn = new RTCPeerConnection({
             ...config,
@@ -231,6 +267,7 @@ export class MediaRTC {
     ): Promise<RTCSessionDescriptionInit> {
         if (sdp.type != 'offer') return;
         await this.Conn.setRemoteDescription(sdp);
+        if (this.microphone) await this.AddLocalTrack()
         const ans = await this.Conn.createAnswer();
         await this.Conn.setLocalDescription(ans);
         if (!this.Conn.localDescription) return;

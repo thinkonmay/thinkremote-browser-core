@@ -191,21 +191,6 @@ class Thinkmay {
         await this.audio.play();
     }
 
-    private async AcquireMicrophone() {
-        // Handles being called several times to update labels. Preserve values.
-        let localStream: MediaStream = null;
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({
-                // audio: true
-            });
-        } catch {
-            return null;
-        }
-
-        const audioTracks = localStream.getAudioTracks();
-
-        return localStream;
-    }
 
     public async ChangeFramerate(framerate: number) {
         if (this.closed) return;
@@ -324,7 +309,8 @@ class Thinkmay {
             this.audio.url,
             this.handleIncomingAudio.bind(this),
             this.handle_metrics.bind(this),
-            () => setTimeout(this.audioEstablishmentLoop.bind(this), 1000)
+            () => setTimeout(this.audioEstablishmentLoop.bind(this), 1000),
+            true
         );
 
         const start = Thinkmay.Now();
