@@ -1,96 +1,26 @@
 import { Log, LogLevel } from '../utils/log';
-import { getBrowser } from '../utils/platform';
+import { MessageType } from './media';
 
-export enum MessageType {
-    Pointer,
-    Bitrate,
-    Framerate,
-    Idr,
-    Hdr,
-    Stop,
-    EventMax
-}
-
-export type RTCMetric =
-    | {
-          codecId: string;
-          mediaType: string;
-          id: string;
-          remoteId: string;
-          kind: 'video';
-          mid: string;
-          trackIdentifier: string;
-          transportId: string;
-          type: string;
-
-          bytesReceived: number;
-          firCount: number;
-          frameHeight: number;
-          frameWidth: number;
-          framesAssembledFromMultiplePackets: number;
-          framesDecoded: number;
-          framesDropped: number;
-          framesPerSecond: number;
-          framesReceived: number;
-          freezeCount: number;
-          headerBytesReceived: number;
-          jitter: number;
-          jitterBufferDelay: number;
-          jitterBufferEmittedCount: number;
-          jitterBufferMinimumDelay: number;
-          jitterBufferTargetDelay: number;
-          keyFramesDecoded: number;
-          lastPacketReceivedTimestamp: number;
-          nackCount: number;
-          packetsLost: number;
-          packetsReceived: number;
-          pauseCount: number;
-          pliCount: number;
-          ssrc: number;
-          timestamp: number;
-          totalAssemblyTime: number;
-          totalDecodeTime: number;
-          totalFreezesDuration: number;
-          totalInterFrameDelay: number;
-          totalPausesDuration: number;
-          totalProcessingDelay: number;
-          totalSquaredInterFrameDelay: number;
-      }
-    | {
-          kind: 'audio';
-
-          totalSamplesReceived: number;
-      };
-
-export class MediaRTC {
+export class MicrophoneRTC {
     public connected: boolean;
     public closed: boolean;
 
     private ws: WebSocket;
     private Conn: RTCPeerConnection;
-    private watch_loop?: any;
     private host: string;
     private pending_ices: RTCIceCandidateInit[];
     private has_rsdp: boolean;
+    private microphone: boolean;
 
-    private rtrackHandler: (a: RTCTrackEvent) => any;
-    private metricHandler: (val: RTCMetric) => void;
     private closeHandler: () => void;
     private sendHandler: (data: { event: string; data: any }) => void;
 
-    constructor(
-        url: string,
-        TrackHandler: (a: RTCTrackEvent) => Promise<void>,
-        MetricsHandler: (val: RTCMetric) => void,
-        CloseHandler: () => void
-    ) {
+    constructor(url: string, CloseHandler: () => void) {
         this.closed = false;
         this.connected = false;
         this.pending_ices = [];
         this.has_rsdp = false;
-        this.metricHandler = MetricsHandler;
         this.closeHandler = CloseHandler;
-        this.rtrackHandler = TrackHandler;
         this.sendHandler = () => {};
 
         this.host = new URL(url).hostname;
@@ -116,14 +46,10 @@ export class MediaRTC {
     }
 
     public Close() {
-        this.metricHandler = () => {};
-        this.rtrackHandler = () => {};
         this.ws?.close();
-        this.ws = undefined;
         this.connected = false;
         this.closed = true;
         this.Conn?.close();
-        if (this.watch_loop != undefined) clearInterval(this.watch_loop);
         const close = this.closeHandler;
         this.closeHandler = () => {};
         close();
@@ -139,9 +65,8 @@ export class MediaRTC {
         try {
             switch (event) {
                 case 'sdp':
-                    const ans = await this.onIncomingSDP(data);
-                    this.sendHandler({ event: 'sdp', data: ans });
                     this.has_rsdp = true;
+                    await this.onIncomingSDP(data);
                     this.pending_ices.forEach((x) => this.onIncomingICE(x));
                     break;
                 case 'ice':
@@ -174,30 +99,66 @@ export class MediaRTC {
         }
     }
 
+    private async AddLocalTrack(): Promise<
+        RTCSessionDescriptionInit | undefined
+    > {
+        // Handles being called several times to update labels. Preserve values.
+        let stream: MediaStream | null = null;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                audio: true
+            });
+        } catch {
+            return;
+        }
+
+        const audioTracks = stream.getAudioTracks();
+        if (audioTracks.length == 0) return;
+
+        const [track] = audioTracks;
+        const tracks = stream.getTracks();
+        for (const track of tracks) this.Conn.addTrack(track, stream);
+
+        const transceiver = this.Conn.getTransceivers().find(
+            (t) => t?.sender?.track === track
+        );
+
+        if (transceiver == undefined) return;
+
+        const codec = {
+            clockRate: 48000,
+            channels: 2,
+            mimeType: 'audio/opus'
+        };
+
+        const { codecs } = RTCRtpSender.getCapabilities('audio') ?? {
+            codecs: []
+        };
+        const selected = codecs.find((x) => x.mimeType == codec.mimeType);
+        if (selected == undefined) return;
+        transceiver.setCodecPreferences([selected]);
+
+        const offer = await this.Conn.createOffer();
+        await this.Conn.setLocalDescription(offer);
+        if (!this.Conn.localDescription) return;
+        return this.Conn.localDescription?.toJSON();
+    }
+
     private async setupConnection(config: RTCConfiguration) {
         this.Conn = new RTCPeerConnection({
             ...config,
-            // bundlePolicy: 'max-bundle',
-            iceTransportPolicy: 'all',
-            // rtcpMuxPolicy: 'negotiate',
-            encodedInsertableStreams: getBrowser() != 'Safari'
+            iceTransportPolicy: 'all'
         } as any);
 
-        this.Conn.ontrack = this.rtrackHandler;
+        const offer = await this.AddLocalTrack();
+        this.sendHandler({
+            event: 'sdp',
+            data: offer
+        });
+
         this.Conn.onicecandidate = this.onICECandidates.bind(this);
         this.Conn.onconnectionstatechange =
             this.onConnectionStateChange.bind(this);
-        this.watch_loop = setInterval(
-            () =>
-                this.Conn?.getStats().then((stats) =>
-                    stats.forEach((val) =>
-                        val.type == 'inbound-rtp'
-                            ? this.metricHandler(val)
-                            : () => {}
-                    )
-                ),
-            2000
-        );
     }
 
     private onConnectionStateChange(eve: Event) {
@@ -226,16 +187,9 @@ export class MediaRTC {
         await this.Conn.addIceCandidate(candidate);
     }
 
-    public async onIncomingSDP(
-        sdp: RTCSessionDescriptionInit
-    ): Promise<RTCSessionDescriptionInit> {
-        if (sdp.type != 'offer') return;
+    public async onIncomingSDP(sdp: RTCSessionDescriptionInit): Promise<void> {
+        if (sdp.type != 'answer') return;
         await this.Conn.setRemoteDescription(sdp);
-        const ans = await this.Conn.createAnswer();
-        await this.Conn.setLocalDescription(ans);
-        if (!this.Conn.localDescription) return;
-        const init = this.Conn.localDescription;
-        return init.toJSON();
     }
 
     private onICECandidates(event: RTCPeerConnectionIceEvent) {

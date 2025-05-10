@@ -1,6 +1,5 @@
 import { HID } from './hid/hid';
 import { TouchHandler } from './hid/touch';
-import { AxisType } from './models/hid.model';
 import { EventCode, HIDMsg } from './models/keys.model';
 import { AudioWrapper } from './pipeline/sink/audio/wrapper';
 import { VideoWrapper } from './pipeline/sink/video/wrapper';
@@ -9,6 +8,7 @@ import { AddNotifier, ConnectionEvent, Log, LogLevel } from './utils/log';
 import { getBrowser, isMobile } from './utils/platform';
 import { DataRTC } from './webrtc/data';
 import { MediaRTC, MessageType, RTCMetric } from './webrtc/media';
+import { MicrophoneRTC } from './webrtc/microphone';
 
 type Metric = {
     video: {
@@ -91,15 +91,22 @@ class Thinkmay {
     public audio: AudioWrapper;
     public Metrics: Metric;
     public dataUrl: string;
+    public micUrl: string;
     public ready(): boolean {
         return this.Metrics.video.status == 'connected';
     }
 
-    constructor(vid: VideoWrapper, audio: AudioWrapper, dataUrl: string) {
+    constructor(
+        vid: VideoWrapper,
+        audio: AudioWrapper,
+        dataUrl: string,
+        micUrl: string
+    ) {
         this.closed = false;
         this.video = vid;
         this.audio = audio;
         this.dataUrl = dataUrl;
+        this.micUrl = micUrl;
         this.Metrics = structuredClone(initialMetric);
 
         this.hid = new HID(this.send.bind(this), vid.internal());
@@ -108,6 +115,7 @@ class Thinkmay {
         Log(LogLevel.Infor, `Started remote desktop connection`);
         this.audioEstablishmentLoop();
         this.videoEstablishmentLoop();
+        this.microphoneEstablishmentLoop();
         this.dataEstablishmentLoop();
     }
 
@@ -121,6 +129,7 @@ class Thinkmay {
 
     private videoConn: MediaRTC;
     private audioConn: MediaRTC;
+    private microConn: MicrophoneRTC;
     private dataConn: DataRTC;
     private closed: boolean;
     private gid = 0;
@@ -190,7 +199,6 @@ class Thinkmay {
         await this.audio.assign(stream);
         await this.audio.play();
     }
-
 
     public async ChangeFramerate(framerate: number) {
         if (this.closed) return;
@@ -309,8 +317,7 @@ class Thinkmay {
             this.audio.url,
             this.handleIncomingAudio.bind(this),
             this.handle_metrics.bind(this),
-            () => setTimeout(this.audioEstablishmentLoop.bind(this), 1000),
-            true
+            () => setTimeout(this.audioEstablishmentLoop.bind(this), 1000)
         );
 
         const start = Thinkmay.Now();
@@ -357,6 +364,14 @@ class Thinkmay {
         }
 
         this.Metrics.video.status = 'connected';
+    };
+
+    private microphoneEstablishmentLoop = async () => {
+        if (this.closed) return;
+
+        this.microConn = new MicrophoneRTC(this.micUrl, () =>
+            setTimeout(this.microphoneEstablishmentLoop.bind(this), 1000)
+        );
     };
 
     private dataEstablishmentLoop = async () => {
