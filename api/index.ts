@@ -132,7 +132,7 @@ type RemoteReqeust = {
 
     audio: ProxyChain;
     video: ProxyChain;
-    microphone: ProxyChain;
+    microphone?: ProxyChain;
     data: ProxyChain;
 };
 
@@ -162,7 +162,7 @@ type Session = {
 type RemoteCredential = {
     audioUrl: string;
     videoUrl: string;
-    microUrl: string;
+    microUrl?: string;
     dataUrl: string;
 };
 
@@ -299,10 +299,10 @@ export function ParseRequest(
         high_mtu ? 1400 : 1200
     }`;
     return {
-        videoUrl: `wss://${address}:444/broadcasters/webrtc?token=${video.token}${opt}`,
-        audioUrl: `wss://${address}:444/broadcasters/webrtc?token=${audio.token}`,
-        microUrl: `wss://${address}:444/broadcasters/microphone?token=${microphone.token}`,
-        dataUrl: `wss://${address}:444/broadcasters/websocket?token=${data.token}`
+        videoUrl: `ws://${address}:444/broadcasters/webrtc?token=${video.token}${opt}`,
+        audioUrl: `ws://${address}:444/broadcasters/webrtc?token=${audio.token}`,
+        microUrl: microphone ? `ws://${address}:444/broadcasters/microphone?token=${microphone.token}` : undefined,
+        dataUrl: `ws://${address}:444/broadcasters/websocket?token=${data.token}`
     };
 }
 

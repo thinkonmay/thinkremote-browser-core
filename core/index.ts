@@ -100,7 +100,7 @@ class Thinkmay {
         vid: VideoWrapper,
         audio: AudioWrapper,
         dataUrl: string,
-        micUrl: string
+        micUrl?: string
     ) {
         this.closed = false;
         this.video = vid;
@@ -115,7 +115,7 @@ class Thinkmay {
         Log(LogLevel.Infor, `Started remote desktop connection`);
         this.audioEstablishmentLoop();
         this.videoEstablishmentLoop();
-        this.microphoneEstablishmentLoop();
+        if (this.micUrl) this.microphoneEstablishmentLoop();
         this.dataEstablishmentLoop();
     }
 
