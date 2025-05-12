@@ -299,10 +299,10 @@ export function ParseRequest(
         high_mtu ? 1400 : 1200
     }`;
     return {
-        videoUrl: `ws://${address}:444/broadcasters/webrtc?token=${video.token}${opt}`,
-        audioUrl: `ws://${address}:444/broadcasters/webrtc?token=${audio.token}`,
-        microUrl: microphone ? `ws://${address}:444/broadcasters/microphone?token=${microphone.token}` : undefined,
-        dataUrl: `ws://${address}:444/broadcasters/websocket?token=${data.token}`
+        videoUrl: `wss://${address}:444/broadcasters/webrtc?token=${video.token}${opt}`,
+        audioUrl: `wss://${address}:444/broadcasters/webrtc?token=${audio.token}`,
+        microUrl: microphone ? `wss://${address}:444/broadcasters/microphone?token=${microphone.token}` : undefined,
+        dataUrl: `wss://${address}:444/broadcasters/websocket?token=${data.token}`
     };
 }
 
