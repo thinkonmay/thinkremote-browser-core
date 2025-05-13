@@ -193,14 +193,15 @@ type RemoteCredential = {
 
 export async function StartThinkmay(
     address: string,
-    vm_request?: Computer,
-    showStatus?: (status: string) => Promise<void>
+    vm_request: Computer,
+    preferred_codec: 'h264' | 'h265',
+    showStatus: (status: string) => Promise<void>
 ): Promise<Computer | APIError> {
     const req = {
         id: uuidv4(),
         thinkmay: {
             displayRequired: true,
-            requestedCodec: 'h265',
+            requestedCodec: preferred_codec,
             requestedProtocol: 'webrtc'
         },
         vm: vm_request
