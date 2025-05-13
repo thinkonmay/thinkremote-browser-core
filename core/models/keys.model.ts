@@ -1,7 +1,7 @@
 import { Log, LogLevel } from '../utils/log';
 
 export enum EventCode {
-    mma,
+    mma = 1,
     mmr,
     mw,
     mu,

@@ -85,6 +85,23 @@ async function GetInfo(ip: string): Promise<Computer | APIError> {
     else return result;
 }
 
+async function ClaimStorage(ip: string): Promise<Session | APIError> {
+    const result = await internalFetch<Session>(ip, 'addon/storage/claim');
+    return result;
+}
+async function ClaimSteam(ip: string): Promise<Session | APIError> {
+    const result = await internalFetch<Session>(ip, 'addon/steam/claim');
+    return result;
+}
+async function UnclaimStorage(ip: string): Promise<Session | APIError> {
+    const result = await internalFetch<Session>(ip, 'addon/storage/unclaim');
+    return result;
+}
+async function UnclaimSteam(ip: string): Promise<Session | APIError> {
+    const result = await internalFetch<Session>(ip, 'addon/steam/unclaim');
+    return result;
+}
+
 type Volume = {
     backing: 'os' | string;
     node: string;
@@ -136,6 +153,22 @@ type RemoteReqeust = {
     data: ProxyChain;
 };
 
+type Steam = {
+    appid: string;
+    type: 'steam';
+    username: string;
+    credential: string;
+};
+
+type S3Credential = {
+    bucket: string;
+    accessId: string;
+    accessKey: string;
+    endpoint: string;
+    token: string;
+    configured: boolean;
+};
+
 type Session = {
     id: string;
     target?: string;
@@ -145,16 +178,8 @@ type Session = {
         password: string;
         port: string;
     };
-    app?: {
-        Type: string;
-        Username: string;
-        Credential: string;
-    };
-    s3bucket?: {
-        bucket: string;
-        mountPath: string;
-    };
-
+    app?: Steam;
+    s3bucket?: S3Credential;
     thinkmay?: RemoteReqeust;
     vm?: Computer;
 };
@@ -175,7 +200,7 @@ export async function StartThinkmay(
         id: uuidv4(),
         thinkmay: {
             displayRequired: true,
-            requestedCodec: 'h264',
+            requestedCodec: 'h265',
             requestedProtocol: 'webrtc'
         },
         vm: vm_request
@@ -210,33 +235,6 @@ export async function StartThinkmay(
     return resp;
 }
 
-export async function LoginSteamOnVM(
-    address: string,
-    target: string,
-    username: string,
-    password: string
-): Promise<Computer | APIError> {
-    const id = uuidv4();
-    const req: Session = {
-        id,
-        target,
-        app: {
-            Type: 'steam',
-            Username: username,
-            Credential: password
-        }
-    };
-
-    return await internalFetch<Computer>(address, 'new', req);
-}
-export async function LogoutSteamOnVM(
-    address: string,
-    req: Session
-): Promise<'SUCCESS' | APIError> {
-    const resp = await internalFetch<Session>(address, 'closed', req);
-    return resp instanceof APIError ? resp : 'SUCCESS';
-}
-
 export async function ChangeNode(
     address: string,
     node: string,
@@ -254,32 +252,6 @@ export async function ChangeTemplate(
         id: volume_id
     });
 }
-export async function MountOnVM(
-    address: string,
-    target: string,
-    bucket_name: string
-): Promise<Computer | APIError> {
-    const id = uuidv4();
-    const req: Session = {
-        id,
-        target,
-        s3bucket: {
-            bucket: bucket_name,
-            mountPath: `C:/${uuidv4()}`
-        }
-    };
-
-    return await internalFetch<Computer>(address, 'new', req);
-}
-export async function UnmountOnVM(
-    address: string,
-    req: Session
-): Promise<'SUCCESS' | APIError> {
-    if (address == undefined) return new APIError('address is not defined');
-    const resp = await internalFetch<Session>(address, 'closed', req);
-    return resp instanceof APIError ? resp : 'SUCCESS';
-}
-
 export function ParseRequest(
     address: string,
     session: Session,
@@ -301,7 +273,9 @@ export function ParseRequest(
     return {
         videoUrl: `wss://${address}:444/broadcasters/webrtc?token=${video.token}${opt}`,
         audioUrl: `wss://${address}:444/broadcasters/webrtc?token=${audio.token}`,
-        microUrl: microphone ? `wss://${address}:444/broadcasters/microphone?token=${microphone.token}` : undefined,
+        microUrl: microphone
+            ? `wss://${address}:444/broadcasters/microphone?token=${microphone.token}`
+            : undefined,
         dataUrl: `wss://${address}:444/broadcasters/websocket?token=${data.token}`
     };
 }
@@ -410,10 +384,14 @@ export {
     CAUSE,
     getFrontendURL,
     GetInfo,
+    ClaimSteam,
+    UnclaimSteam,
+    ClaimStorage,
+    UnclaimStorage,
     getRemoteSession,
     GLOBAL,
     POCKETBASE,
     UserEvents,
     UserSession
 };
-export type { Computer, RemoteCredential, Session };
+export type { Computer, RemoteCredential, Session, Steam, S3Credential };
