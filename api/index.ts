@@ -85,20 +85,26 @@ async function GetInfo(ip: string): Promise<Computer | APIError> {
     else return result;
 }
 
-async function ClaimStorage(ip: string): Promise<Session | APIError> {
-    const result = await internalFetch<Session>(ip, 'addon/storage/claim');
+async function ClaimStorage(ip: string): Promise<string | APIError> {
+    const result = await internalFetch<string>(ip, 'addon/storage/claim');
     return result;
 }
-async function ClaimSteam(ip: string): Promise<Session | APIError> {
-    const result = await internalFetch<Session>(ip, 'addon/steam/claim');
+async function ClaimSteam(ip: string): Promise<string | APIError> {
+    const result = await internalFetch<string>(ip, 'addon/steam/claim');
     return result;
 }
-async function UnclaimStorage(ip: string): Promise<Session | APIError> {
-    const result = await internalFetch<Session>(ip, 'addon/storage/unclaim');
+async function UnclaimStorage(
+    ip: string,
+    text: string
+): Promise<'success' | APIError> {
+    const result = await internalFetch<'success'>(ip, 'addon/storage/unclaim');
     return result;
 }
-async function UnclaimSteam(ip: string): Promise<Session | APIError> {
-    const result = await internalFetch<Session>(ip, 'addon/steam/unclaim');
+async function UnclaimSteam(
+    ip: string,
+    text: string
+): Promise<'success' | APIError> {
+    const result = await internalFetch<'success'>(ip, 'addon/steam/unclaim');
     return result;
 }
 
@@ -383,16 +389,16 @@ function getRemoteSession(computer: Computer): Session | undefined {
 
 export {
     CAUSE,
+    ClaimSteam,
+    ClaimStorage,
     getFrontendURL,
     GetInfo,
-    ClaimSteam,
-    UnclaimSteam,
-    ClaimStorage,
-    UnclaimStorage,
     getRemoteSession,
     GLOBAL,
     POCKETBASE,
+    UnclaimSteam,
+    UnclaimStorage,
     UserEvents,
     UserSession
 };
-export type { Computer, RemoteCredential, Session, Steam, S3Credential };
+export type { Computer, RemoteCredential, S3Credential, Session, Steam };
