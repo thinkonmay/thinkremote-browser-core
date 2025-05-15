@@ -39,47 +39,6 @@ export enum KeyCode {
     Esc = 'Escape'
 }
 
-export class Shortcut {
-    code: ShortcutCode;
-    keys: Array<KeyCode>;
-    Handler: (a: void) => void;
-
-    constructor(
-        code: ShortcutCode,
-        keys: Array<KeyCode>,
-        Handler: (a: void) => void
-    ) {
-        this.code = code;
-        this.keys = keys;
-        this.Handler = Handler;
-    }
-
-    public ManualTrigger(): void {
-        this.Handler();
-    }
-
-    public HandleShortcut(event: KeyboardEvent): Boolean {
-        const shift = this.keys.includes(KeyCode.Shift) === event.shiftKey;
-        const alt = this.keys.includes(KeyCode.Alt) === event.altKey;
-        const ctrl = this.keys.includes(KeyCode.Ctrl) === event.ctrlKey;
-
-        let key = false;
-        this.keys.forEach((element) => {
-            if (element === event.code) {
-                key = true;
-            }
-        });
-
-        if (shift && alt && ctrl && key) {
-            event.preventDefault();
-            Log(LogLevel.Infor, `shortcut fired with code ${this.code}`);
-            this.Handler();
-            return true;
-        }
-        return false;
-    }
-}
-
 export class HIDMsg {
     code: EventCode;
     data: any;

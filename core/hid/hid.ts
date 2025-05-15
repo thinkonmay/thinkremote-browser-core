@@ -1,13 +1,9 @@
 import {
     EventCode,
     HIDMsg,
-    KeyCode,
-    Shortcut,
-    ShortcutCode
 } from '../models/keys.model';
 import { convertJSKey } from '../utils/convert';
 import { Log, LogLevel } from '../utils/log';
-import { requestFullscreen } from '../utils/screen';
 
 const MOUSE_SPEED = 1.07;
 
@@ -17,8 +13,6 @@ export class HID {
     private prev_axis: Map<number, number>;
 
     private pressing_keys: number[];
-
-    private shortcuts: Array<Shortcut>;
 
     private relativeMouse: boolean;
     public scancode: boolean;
@@ -72,23 +66,6 @@ export class HID {
         document.onkeyup = this.keyup.bind(this);
 
         /**
-         * shortcuts stuff
-         */
-        this.shortcuts = new Array<Shortcut>();
-        this.shortcuts.push(
-            new Shortcut(
-                ShortcutCode.Fullscreen,
-                [KeyCode.Ctrl, KeyCode.Shift, KeyCode.F],
-                requestFullscreen
-            ),
-            new Shortcut(
-                ShortcutCode.Fullscreen,
-                [KeyCode.F11],
-                requestFullscreen
-            )
-        );
-
-        /**
          * gamepad stuff
          */
         Array.from(Array(16).keys()).forEach((x) => {
@@ -128,7 +105,6 @@ export class HID {
         document.onmousedown = null;
         document.onmouseup = null;
         document.onkeydown = null;
-        this.shortcuts = new Array<Shortcut>();
     }
 
     public async handleIncomingData(blob: Blob) {
@@ -206,15 +182,6 @@ export class HID {
     private async keydown(event: KeyboardEvent) {
         this.last_interact = new Date();
         event.preventDefault();
-        let disable_send = false;
-        this.shortcuts.forEach((element: Shortcut) => {
-            const triggered = element.HandleShortcut(event);
-
-            if (triggered) disable_send = true;
-        });
-
-        if (disable_send) return;
-
         if (event.key == 'Meta') return;
 
         const key = convertJSKey(event.key, event.location);
