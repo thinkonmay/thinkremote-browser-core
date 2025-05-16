@@ -201,7 +201,7 @@ export async function StartThinkmay(
     address: string,
     vm_request: Computer,
     preferred_codec: 'h264' | 'h265',
-    showStatus: (status: string) => Promise<void>
+    showStatus: (status: string, code: number) => Promise<void>
 ): Promise<Computer | APIError> {
     const req = {
         id: uuidv4(),
@@ -214,7 +214,7 @@ export async function StartThinkmay(
     } as Session;
 
     let running = true;
-    type deployment_status = { status: string };
+    type deployment_status = { status: string, code: number };
     if (vm_request != undefined)
         (async (_req: Session) => {
             await new Promise((r) => setTimeout(r, 3000));
@@ -225,7 +225,7 @@ export async function StartThinkmay(
                     _req
                 );
                 if (!(request_new instanceof APIError)) {
-                    showStatus(request_new.status);
+                    showStatus(request_new.status, request_new.code);
                     await new Promise((r) => setTimeout(r, 1000));
                 }
             }
