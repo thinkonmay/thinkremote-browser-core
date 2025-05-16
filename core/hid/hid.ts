@@ -1,7 +1,4 @@
-import {
-    EventCode,
-    HIDMsg,
-} from '../models/keys.model';
+import { EventCode, HIDMsg } from '../models/keys.model';
 import { convertJSKey } from '../utils/convert';
 import { Log, LogLevel } from '../utils/log';
 
