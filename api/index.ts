@@ -201,7 +201,7 @@ export async function StartThinkmay(
     address: string,
     vm_request: Computer,
     preferred_codec: 'h264' | 'h265',
-    showStatus: (status: string, code: number) => Promise<void>
+    showStatus: (status: string, code?: number) => Promise<void>
 ): Promise<Computer | APIError> {
     const req = {
         id: uuidv4(),
