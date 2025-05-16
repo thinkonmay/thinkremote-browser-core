@@ -30,10 +30,10 @@ export const ready = async (): Promise<boolean> => {
     return true;
 };
 
-export async function gamepadButton(index: number, isDown?: boolean) {
-    return (e: Event) => {
+export function gamepadButton(index: number, isDown?: boolean) {
+    return async (e: Event) => {
         e.preventDefault();
-        CLIENT?.VirtualGamepadButton(isDown, index);
+        await CLIENT?.VirtualGamepadButton(isDown, index);
         if ('vibrate' in navigator && isDown) navigator.vibrate([40, 30, 0]);
     };
 }
