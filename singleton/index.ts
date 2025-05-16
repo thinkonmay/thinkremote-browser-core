@@ -31,8 +31,11 @@ export const ready = async (): Promise<boolean> => {
 };
 
 export async function gamepadButton(index: number, isDown?: boolean) {
-    CLIENT?.VirtualGamepadButton(isDown, index);
-    if ('vibrate' in navigator && isDown) navigator.vibrate([40, 30, 0]);
+    return (e: Event) => {
+        e.preventDefault()
+        CLIENT?.VirtualGamepadButton(isDown, index);
+        if ('vibrate' in navigator && isDown) navigator.vibrate([40, 30, 0]);
+    }
 }
 
 export const virtMouseWheel = (deltaY: number) =>
