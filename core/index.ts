@@ -233,6 +233,7 @@ class Thinkmay {
         this.videoConn?.Close();
         this.audioConn?.Close();
         this.dataConn?.Close();
+        this.microConn?.Close();
         this.Metrics.audio.status = 'close';
         this.Metrics.video.status = 'close';
     }
