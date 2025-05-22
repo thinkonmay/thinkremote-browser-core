@@ -274,7 +274,7 @@ export function ParseRequest(
         high_mtu: false,
         high_queue: true
     };
-    const opt = `&queue_size=${high_queue ? 16 : 4}&mtu=${
+    const opt = `&queue_size=${high_queue ? 64 : 16}&mtu=${
         high_mtu ? 1400 : 1200
     }`;
     return {

@@ -11,8 +11,6 @@ enum Event {
 }
 export class TouchHandler {
     private onGoingTouchs: Map<number, TouchData>;
-    public mode: 'trackpad' | 'none';
-    public touch_callback: () => Promise<void>;
 
     private last_interact: Date;
     public last_active(): number {
@@ -28,16 +26,13 @@ export class TouchHandler {
     ) {
         this.onGoingTouchs = new Map<number, TouchData>();
         this.SendFunc = Sendfunc;
-        this.touch_callback = async () => {};
 
-        this.mode = 'trackpad';
         this.video = video;
         this.last_interact = new Date();
 
         this.video.ontouchend = this.handleEnd.bind(this);
         this.video.ontouchstart = this.handleStart.bind(this);
-        this.video.ontouchmove = (e) =>
-            this.mode != 'none' ? this.handleMove.bind(this)(e) : null;
+        this.video.ontouchmove = this.handleMove.bind(this);
     }
 
     public Close() {
@@ -45,11 +40,9 @@ export class TouchHandler {
         this.video.ontouchend = null;
         this.video.ontouchmove = null;
         clearInterval(this.running);
-        this.mode = 'none';
     }
 
     private async ListenEvents(events: Event) {
-        if (this.mode == 'none') return;
         switch (events) {
             case Event.short_right:
                 await this.SendFunc(
@@ -79,7 +72,6 @@ export class TouchHandler {
     private handleStart = (evt: TouchEvent) => {
         evt.preventDefault();
         this.last_interact = new Date();
-        this.touch_callback();
 
         const touches = evt.changedTouches;
         for (let i = 0; i < touches.length; i++)
@@ -106,7 +98,7 @@ export class TouchHandler {
             };
 
             if (touch == undefined) continue;
-            if (this.mode == 'trackpad' && validtouch())
+            if (validtouch())
                 await this.ListenEvents(
                     this.isTouchRight(touch)
                         ? Event.short_right
@@ -126,17 +118,16 @@ export class TouchHandler {
             const prev_touch = this.onGoingTouchs.get(curr_touch.identifier);
 
             if (prev_touch == undefined) continue;
-            else if (this.mode == 'trackpad')
-                await this.SendFunc(
-                    new HIDMsg(EventCode.mmr, {
-                        dX:
-                            MOUSE_SPEED *
-                            Math.round(curr_touch.clientX - prev_touch.clientX),
-                        dY:
-                            MOUSE_SPEED *
-                            Math.round(curr_touch.clientY - prev_touch.clientY)
-                    })
-                );
+            await this.SendFunc(
+                new HIDMsg(EventCode.mmr, {
+                    dX:
+                        MOUSE_SPEED *
+                        Math.round(curr_touch.clientX - prev_touch.clientX),
+                    dY:
+                        MOUSE_SPEED *
+                        Math.round(curr_touch.clientY - prev_touch.clientY)
+                })
+            );
 
             prev_touch.copyFromTouch(curr_touch);
         }
