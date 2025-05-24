@@ -12,8 +12,8 @@ import {
 export function ValidateIPaddress(ipaddress: string) {
     return ipaddress != undefined
         ? /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
-            ipaddress
-        )
+              ipaddress
+          )
         : false;
 }
 
@@ -174,8 +174,7 @@ type S3Credential = {
     token: string;
     configured: boolean;
 };
-type Backup= {
-};
+type Backup = {};
 
 type Session = {
     id: string;
@@ -214,7 +213,7 @@ export async function StartThinkmay(
             displayRequired: true,
             requestedCodec: preferred_codec,
             requestedProtocol: 'webrtc'
-        },
+        }
     } as Session;
 
     let running = true;
@@ -248,7 +247,7 @@ export async function StartThinkmay(
 
 export async function CreateSession(
     address: string,
-    session: Session,
+    session: Session
 ): Promise<Computer | APIError> {
     return await internalFetch<Computer>(address, `new`, session);
 }
@@ -285,8 +284,9 @@ export function ParseRequest(
         high_mtu: false,
         high_queue: true
     };
-    const opt = `&queue_size=${high_queue ? 64 : 16}&mtu=${high_mtu ? 1400 : 1200
-        }`;
+    const opt = `&queue_size=${high_queue ? 64 : 16}&mtu=${
+        high_mtu ? 1400 : 1200
+    }`;
     return {
         videoUrl: `wss://${address}:444/broadcasters/webrtc?token=${video.token}${opt}`,
         audioUrl: `wss://${address}:444/broadcasters/webrtc?token=${audio.token}`,
@@ -412,4 +412,3 @@ export {
     UserSession
 };
 export type { Computer, RemoteCredential, S3Credential, Session, Steam };
-
