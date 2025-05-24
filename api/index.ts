@@ -12,8 +12,8 @@ import {
 export function ValidateIPaddress(ipaddress: string) {
     return ipaddress != undefined
         ? /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
-              ipaddress
-          )
+            ipaddress
+        )
         : false;
 }
 
@@ -174,10 +174,11 @@ type S3Credential = {
     token: string;
     configured: boolean;
 };
+type Backup= {
+};
 
 type Session = {
     id: string;
-    target?: string;
 
     sunshine?: {
         username: string;
@@ -187,6 +188,7 @@ type Session = {
     app?: Steam;
     s3bucket?: S3Credential;
     thinkmay?: RemoteReqeust;
+    backup?: Backup;
     vm?: Computer;
 };
 
@@ -205,16 +207,18 @@ export async function StartThinkmay(
 ): Promise<Computer | APIError> {
     const req = {
         id: uuidv4(),
+        vm: vm_request,
+        // app: {},
+        s3bucket: {},
         thinkmay: {
             displayRequired: true,
             requestedCodec: preferred_codec,
             requestedProtocol: 'webrtc'
         },
-        vm: vm_request
     } as Session;
 
     let running = true;
-    type deployment_status = { status: string, code: number };
+    type deployment_status = { status: string; code: number };
     if (vm_request != undefined)
         (async (_req: Session) => {
             await new Promise((r) => setTimeout(r, 3000));
@@ -240,6 +244,13 @@ export async function StartThinkmay(
     }
     running = false;
     return resp;
+}
+
+export async function CreateSession(
+    address: string,
+    session: Session,
+): Promise<Computer | APIError> {
+    return await internalFetch<Computer>(address, `new`, session);
 }
 
 export async function ChangeNode(
@@ -274,9 +285,8 @@ export function ParseRequest(
         high_mtu: false,
         high_queue: true
     };
-    const opt = `&queue_size=${high_queue ? 64 : 16}&mtu=${
-        high_mtu ? 1400 : 1200
-    }`;
+    const opt = `&queue_size=${high_queue ? 64 : 16}&mtu=${high_mtu ? 1400 : 1200
+        }`;
     return {
         videoUrl: `wss://${address}:444/broadcasters/webrtc?token=${video.token}${opt}`,
         audioUrl: `wss://${address}:444/broadcasters/webrtc?token=${audio.token}`,
@@ -402,3 +412,4 @@ export {
     UserSession
 };
 export type { Computer, RemoteCredential, S3Credential, Session, Steam };
+
