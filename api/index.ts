@@ -207,7 +207,7 @@ export async function StartThinkmay(
     const req = {
         id: uuidv4(),
         vm: vm_request,
-        // app: {},
+        app: {},
         s3bucket: {},
         thinkmay: {
             displayRequired: true,
