@@ -54,6 +54,12 @@ async function internalFetch<T>(
                     respbody.code ?? 500
                 );
             } else return respbody as T;
+        } else if (command.includes('log')) {
+            const resp = await fetch(url, {
+                method: 'GET',
+                headers: { Authorization: token, User: user }
+            });
+            return (await resp.text()) as T;
         } else {
             const resp = await fetch(url, {
                 method: 'POST',
@@ -357,6 +363,15 @@ export async function CloseSession(
     req: Session
 ): Promise<Computer | APIError> {
     return internalFetch<Computer>(address, 'closed', req);
+}
+
+export async function GetVmLog(
+    address: string,
+    computer: Computer
+): Promise<string | APIError> {
+    const session = computer.Sessions.find((x) => x.vm != undefined)?.id;
+    if (!session) return new APIError('no session available');
+    return internalFetch<string>(address, `log?target=${session}`);
 }
 
 function getRandomInt(min: number, max: number) {
