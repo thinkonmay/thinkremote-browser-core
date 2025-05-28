@@ -19,15 +19,18 @@ export const Assign = (client: RemoteDesktopClient) => {
     CLIENT = client;
 };
 
-export const ready = async (): Promise<boolean> => {
+export const ready = async (): Promise<Error | void> => {
     const now = () => new Date().getTime() / 1000;
     const start = now();
     while (CLIENT == undefined || !CLIENT.ready()) {
         await new Promise((r) => setTimeout(r, 1000));
-        if (now() - start > 10 * 60) return false;
+        if (now() - start > 10 * 60) return new Error('connect timeout');
+        else if (CLIENT == null) return new Error('null client');
+        else if (CLIENT.authFailed())
+            return new Error('streaming auth failure');
     }
 
-    return true;
+    return;
 };
 
 export function gamepadButton(index: number, isDown?: boolean) {

@@ -87,14 +87,18 @@ const initialMetric: Metric = {
 class Thinkmay {
     public hid: HID;
     public touch: TouchHandler;
-    public video: VideoWrapper;
-    public audio: AudioWrapper;
     public Metrics: Metric;
-    public dataUrl: string;
-    public micUrl: string;
     public ready(): boolean {
         return this.Metrics.video.status == 'connected';
     }
+    public authFailed(): boolean {
+        return this.videoConn.authFailure;
+    }
+
+    video: VideoWrapper;
+    audio: AudioWrapper;
+    dataUrl: string;
+    micUrl: string;
 
     constructor(
         vid: VideoWrapper,

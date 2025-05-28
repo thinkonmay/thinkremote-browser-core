@@ -65,6 +65,7 @@ export type RTCMetric =
 export class MediaRTC {
     public connected: boolean;
     public closed: boolean;
+    public authFailure: boolean;
 
     private ws: WebSocket;
     private Conn: RTCPeerConnection;
@@ -86,6 +87,7 @@ export class MediaRTC {
     ) {
         this.closed = false;
         this.connected = false;
+        this.authFailure = false;
         this.pending_ices = [];
         this.has_rsdp = false;
         this.metricHandler = MetricsHandler;
@@ -130,12 +132,20 @@ export class MediaRTC {
     }
 
     private async handleIncomingPacket(ev: MessageEvent) {
+        let result = {};
         const txt = await (ev.data as Blob).text();
-        const { event, data } = JSON.parse(txt) as {
+        try {
+            result = JSON.parse(txt);
+        } catch {
+            if (txt.includes('invalid key')) this.authFailure = true;
+            return;
+        }
+
+        this.authFailure = false;
+        const { event, data } = result as {
             event: string;
             data: any;
         };
-
         try {
             switch (event) {
                 case 'sdp':
