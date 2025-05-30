@@ -218,7 +218,7 @@ export async function StartThinkmay(
         thinkmay: {
             displayRequired: true,
             requestedCodec: preferred_codec,
-            requestedProtocol: 'webrtc'
+            requestedProtocol: 'quic'
         }
     } as Session;
 
