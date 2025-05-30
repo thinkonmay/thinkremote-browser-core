@@ -208,6 +208,7 @@ export async function StartThinkmay(
     address: string,
     vm_request: Computer,
     preferred_codec: 'h264' | 'h265',
+    preferred_proto: 'quic' | 'udp',
     showStatus: (status: string, code?: number) => Promise<void>
 ): Promise<Computer | APIError> {
     const req = {
@@ -218,7 +219,7 @@ export async function StartThinkmay(
         thinkmay: {
             displayRequired: true,
             requestedCodec: preferred_codec,
-            requestedProtocol: 'quic'
+            requestedProtocol: preferred_proto
         }
     } as Session;
 
