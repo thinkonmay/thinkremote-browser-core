@@ -166,9 +166,9 @@ type RemoteReqeust = {
 };
 
 type NDisk = {
-    address: string
-    volume: Volume
-}
+    address: string;
+    volume: Volume;
+};
 
 type Steam = {
     appid: string;
@@ -408,7 +408,7 @@ async function DiscordRichPresence(app_id: string): Promise<string> {
 function getRemoteSession(computer: Computer): Session | undefined {
     if (computer.Sessions == undefined) return undefined;
     for (const session of computer.Sessions) {
-        if (session.ndisk != undefined) continue
+        if (session.ndisk != undefined) continue;
         if (session.vm != undefined) {
             const subsession = getRemoteSession(session.vm);
             if (subsession != undefined) return subsession;
