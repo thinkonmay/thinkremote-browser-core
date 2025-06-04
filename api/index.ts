@@ -132,6 +132,7 @@ type Computer = {
     remoteReady?: boolean;
     virtReady?: boolean;
 
+    Ndisks?: NDisk[];
     Volumes?: Volume[];
     Sessions?: Session[];
     Interfaces?: {
