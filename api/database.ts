@@ -18,6 +18,11 @@ export enum CAUSE {
     INVALID_REF
 }
 
+export function getDefaultDomain(): string {
+    const address = localStorage.getItem('thinkmay_domain');
+    if (address == null) return 'https://saigon2.thinkmay.net';
+    else return address;
+}
 export function getFrontendURL(): string {
     const address = localStorage.getItem('thinkmay_domain');
     if (address == null) return 'https://saigon2.thinkmay.net';

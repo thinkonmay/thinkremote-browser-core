@@ -1,4 +1,3 @@
-import { Child, Command } from '@tauri-apps/api/shell';
 import { v4 as uuidv4 } from 'uuid';
 import {
     CAUSE,
@@ -311,60 +310,6 @@ export function ParseRequest(
     };
 }
 
-type MoonlightStreamConfig = {
-    bitrate?: number;
-    width?: number;
-    height?: number;
-};
-export async function StartMoonlight(
-    address: string,
-    options?: MoonlightStreamConfig,
-    callback?: (type: 'stdout' | 'stderr', log: string) => void
-): Promise<Child> {
-    const PORT = getRandomInt(60000, 65530);
-    const sunshine = {
-        username: getRandomInt(0, 9999).toString(),
-        password: getRandomInt(0, 9999).toString(),
-        port: PORT.toString()
-    };
-
-    const id = uuidv4();
-    const req = {
-        id,
-        sunshine
-    };
-
-    const resp = await internalFetch<Session>(address, 'new', req);
-    if (resp instanceof APIError) throw resp;
-
-    const { username, password } = sunshine;
-    const cmds = [
-        '--address',
-        address,
-        '--port',
-        `${PORT}`,
-        '--width',
-        `${options?.width ?? 1920}`,
-        '--height',
-        `${options?.height ?? 1080}`,
-        '--bitrate',
-        `${options?.bitrate ?? 6000}`,
-        '--username',
-        username,
-        '--password',
-        password
-    ];
-
-    const command = new Command('Moonlight', cmds);
-    command.stderr.addListener('data', (data) =>
-        callback != undefined ? callback('stderr', data) : console.log(data)
-    );
-    command.stdout.addListener('data', (data) =>
-        callback != undefined ? callback('stdout', data) : console.log(data)
-    );
-
-    return await command.spawn();
-}
 
 export async function CloseSession(
     address: string,
@@ -386,24 +331,6 @@ function getRandomInt(min: number, max: number) {
     const minCeiled = Math.ceil(min);
     const maxFloored = Math.floor(max);
     return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled);
-}
-async function JoinZeroTier(network_id: string): Promise<string> {
-    const command = await new Command('ZeroTier', [
-        'leave',
-        network_id
-    ]).execute();
-    return command.stdout + '\n' + command.stderr;
-}
-async function LeaveZeroTier(network_id: string): Promise<string> {
-    const command = await new Command('ZeroTier', [
-        'join',
-        network_id
-    ]).execute();
-    return command.stdout + '\n' + command.stderr;
-}
-async function DiscordRichPresence(app_id: string): Promise<string> {
-    const command = await new Command('Daemon', ['discord', app_id]).execute();
-    return command.stdout + '\n' + command.stderr;
 }
 
 function getRemoteSession(computer: Computer): Session | undefined {
