@@ -40,11 +40,22 @@ const stack: { content: any; timestamp: string }[] = [];
 const value = {
     ip: 'unknown',
     stack,
-    os: getOS(),
-    browser: getBrowser(),
-    resolution: getResolution(),
-    url: window.location.href
+    os: 'unknown',
+    browser: 'unknown',
+    resolution: {},
+    url: 'unknown',
 };
+
+export let DevEnv = false
+if (typeof window != 'undefined') {
+    value.os= getOS()
+    value.browser= getBrowser()
+    value.resolution= getResolution()
+    value.url= window.location.href
+    
+    DevEnv = window.location.href.includes('localhost') ||
+    ValidateIPaddress(window.location.host.split(':')[0]);
+}
 
 let current_stack_length = 0;
 export function UserEvents(content: { type: string; payload: any }) {
@@ -54,9 +65,7 @@ export function UserEvents(content: { type: string; payload: any }) {
     });
 }
 
-export const DevEnv =
-    window.location.href.includes('localhost') ||
-    ValidateIPaddress(window.location.host.split(':')[0]);
+
 export async function UserSession(email: string) {
     if (DevEnv) return;
 
