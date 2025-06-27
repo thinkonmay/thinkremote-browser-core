@@ -31,8 +31,8 @@ export function getFrontendURL(): string {
 export const POCKETBASE = () => new PocketBase(getFrontendURL());
 export const GLOBAL = () =>
     createClient(
-        'https://play.2.thinkmay.net:445',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE'
+        'https://jsnsuyxuvdstcxskzjsg.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzbnN1eXh1dmRzdGN4c2t6anNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA1Mzc0OTUsImV4cCI6MjA1NjExMzQ5NX0.2p5UZ6AFlgm8qv2EjPVw7AYgzOLlN2biXkfHAq4ZhR4'
     );
 
 let id = 'unknown';
