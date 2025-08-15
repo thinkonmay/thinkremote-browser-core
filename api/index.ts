@@ -4,8 +4,6 @@ import {
     getFrontendURL,
     GLOBAL,
     POCKETBASE,
-    UserEvents,
-    UserSession
 } from './database';
 
 export function ValidateIPaddress(ipaddress: string) {
@@ -359,7 +357,5 @@ export {
     POCKETBASE,
     UnclaimSteam,
     UnclaimStorage,
-    UserEvents,
-    UserSession
 };
 export type { Computer, RemoteCredential, S3Credential, Session, Steam };
