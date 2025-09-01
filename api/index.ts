@@ -65,7 +65,7 @@ async function internalSSE<T>(
     address: string,
     command: string,
     body?: any,
-    feedback?: (status: string, code?: number) => Promise<void>
+    feedback?: (data: T) => Promise<void>
 ): Promise<T | APIError> {
     const pb = POCKETBASE();
 
@@ -73,14 +73,10 @@ async function internalSSE<T>(
     if (id instanceof APIError) return id;
 
     const evtSource = new EventSource(`${pb.baseURL}/${command}/sse?id=${id}`);
-    type resultData = { status: string; code: number; info?: T };
-    let result: resultData = { status: '', code: -1 };
-    evtSource.onopen = () => {
-        evtSource.onmessage = async (ev) => {
-            result = JSON.parse(ev.data);
-            await feedback(result.status, result.code);
-        };
-    };
+
+    let result: T = null;
+    if (feedback != undefined)
+        evtSource.onmessage = (ev) => feedback(JSON.parse(ev.data));
 
     let start = Date.now();
     while (evtSource.readyState == evtSource.CONNECTING) {
@@ -89,13 +85,10 @@ async function internalSSE<T>(
         await new Promise((r) => setTimeout(r, 100));
     }
 
-    while (evtSource.readyState == evtSource.OPEN) {
+    while (evtSource.readyState == evtSource.OPEN)
         await new Promise((r) => setTimeout(r, 100));
-        if (result.info != null) return result.info;
-    }
 
-    if (result.info != null) return result.info;
-    return new APIError('connection closed while waiting for result');
+    return result;
 }
 
 async function GetInfo(ip: string): Promise<Computer | APIError> {
@@ -244,7 +237,18 @@ export async function StartThinkmay(
         }
     } as Session;
 
-    return await internalSSE<Computer>(address, 'new', req, showStatus);
+    type newRes = {
+        status: string;
+        code: number;
+        info?: Computer;
+    };
+
+    const res = await internalSSE<newRes>(address, 'new', req, (res) =>
+        showStatus(res.status, res.code)
+    );
+    if (res instanceof APIError) return res;
+
+    return res.info;
 }
 
 export async function CreateSession(
@@ -265,8 +269,8 @@ export async function ChangeTemplate(
     address: string,
     template: string,
     volume_id: string
-): Promise<'success' | APIError> {
-    return await internalFetch<'success'>(address, 'reallocate', {
+): Promise<void | APIError> {
+    return await internalSSE<void>(address, 'reallocate', {
         source: `${template}.template`,
         id: volume_id
     });
