@@ -72,15 +72,13 @@ async function internalSSE<T>(
     const id = await internalFetch<string>(address, command, body);
     if (id instanceof APIError) return id;
 
-    console.log(id);
     const evtSource = new EventSource(`${pb.baseURL}/${command}/sse?id=${id}`);
-
     type resultData = { status: string; code: number; info?: T };
     let result: resultData = { status: '', code: -1 };
     evtSource.onopen = () => {
-        evtSource.onmessage = (ev) => {
+        evtSource.onmessage = async (ev) => {
             result = JSON.parse(ev.data);
-            feedback(result.status, result.code);
+            await feedback(result.status, result.code);
         };
     };
 
