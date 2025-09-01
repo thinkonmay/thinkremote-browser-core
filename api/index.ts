@@ -1,3 +1,4 @@
+import { ClientResponseError } from 'pocketbase';
 import { v4 as uuidv4 } from 'uuid';
 import {
     CAUSE,
@@ -31,56 +32,72 @@ async function internalFetch<T>(
     command: string,
     body?: any
 ): Promise<T | APIError> {
-    try {
-        const token = POCKETBASE().authStore.token;
-        const user = POCKETBASE().authStore.model?.id;
-        const url = `https://${address}/${command}`;
-        let respbody = undefined;
-
-        if (command == 'info') {
-            const resp = await fetch(url, {
-                method: 'GET',
-                headers: { Authorization: token, User: user }
+    const pb = POCKETBASE();
+    if (command == 'info') {
+        try {
+            return await pb.send<T>(command, {
+                method: 'GET'
             });
-            try {
-                respbody = await resp.json();
-            } catch {
-                return new APIError(await resp.text(), 0);
-            }
-            if (!resp.ok) {
-                return new APIError(
-                    respbody.message ?? 'Unknown error',
-                    respbody.code ?? 500
-                );
-            } else return respbody as T;
-        } else if (command.includes('log')) {
-            const resp = await fetch(url, {
-                method: 'GET',
-                headers: { Authorization: token, User: user }
-            });
-            return (await resp.text()) as T;
-        } else {
-            const resp = await fetch(url, {
-                method: 'POST',
-                headers: { Authorization: token, User: user },
-                body: JSON.stringify(body)
-            });
-
-            try {
-                respbody = await resp.json();
-            } catch {
-                return new APIError(await resp.text(), 0);
-            }
-            if (!resp.ok)
-                return new APIError(
-                    respbody.message ?? 'Unknown error',
-                    respbody.code ?? 500
-                );
-            else return respbody as T;
+        } catch (e) {
+            const cre = e as ClientResponseError;
+            return new APIError(
+                cre.message ?? 'Unknown error',
+                cre.status ?? 500
+            );
         }
-    } catch (err) {
-        return new APIError('Unable to call request to server', 500);
+    } else {
+        try {
+            return await pb.send<T>(command, {
+                method: 'POST',
+                body: body ?? {}
+            });
+        } catch (e) {
+            const cre = e as ClientResponseError;
+            return new APIError(
+                cre.message ?? 'Unknown error',
+                cre.status ?? 500
+            );
+        }
     }
+}
+
+async function internalSSE<T>(
+    address: string,
+    command: string,
+    body?: any,
+    feedback?: (status: string, code?: number) => Promise<void>
+): Promise<T | APIError> {
+    const pb = POCKETBASE();
+
+    const id = await internalFetch<string>(address, command, body);
+    if (id instanceof APIError) return id;
+
+    console.log(id);
+    const evtSource = new EventSource(`${pb.baseURL}/${command}/sse?id=${id}`);
+
+    type resultData = { status: string; code: number; info?: T };
+    let result: resultData = { status: '', code: -1 };
+    evtSource.onopen = () => {
+        evtSource.onmessage = (ev) => {
+            result = JSON.parse(ev.data);
+            feedback(result.status, result.code);
+        };
+    };
+
+    let start = Date.now();
+    while (evtSource.readyState == evtSource.CONNECTING) {
+        if (Date.now() - start > 5000)
+            return new APIError('timeout 5s establish SSE');
+        await new Promise((r) => setTimeout(r, 100));
+    }
+
+    while (evtSource.readyState == evtSource.OPEN) {
+        await new Promise((r) => setTimeout(r, 100));
+        if (result.info != null) return result.info;
+    }
+
+    if (result.info != null) return result.info;
+    return new APIError('connection closed while waiting for result');
 }
 
 async function GetInfo(ip: string): Promise<Computer | APIError> {
@@ -229,40 +246,14 @@ export async function StartThinkmay(
         }
     } as Session;
 
-    let running = true;
-    type deployment_status = { status: string; code: number };
-    if (vm_request != undefined)
-        (async (_req: Session) => {
-            await new Promise((r) => setTimeout(r, 3000));
-            while (running) {
-                const request_new = await internalFetch<deployment_status>(
-                    address,
-                    '_new',
-                    _req
-                );
-                if (!(request_new instanceof APIError)) {
-                    showStatus(request_new.status, request_new.code);
-                    await new Promise((r) => setTimeout(r, 1000));
-                }
-            }
-        })(req);
-
-    let resp: APIError | Computer = new APIError('unable to request', 500);
-    try {
-        resp = await internalFetch<Computer>(address, 'new', req);
-    } catch (err) {
-        running = false;
-        return resp;
-    }
-    running = false;
-    return resp;
+    return await internalSSE<Computer>(address, 'new', req, showStatus);
 }
 
 export async function CreateSession(
     address: string,
     session: Session
 ): Promise<Computer | APIError> {
-    return await internalFetch<Computer>(address, `new`, session);
+    return await internalFetch<Computer>(address, 'new', session);
 }
 
 export async function ChangeNode(
@@ -309,7 +300,6 @@ export function ParseRequest(
         dataUrl: `wss://${address}:444/broadcasters/websocket?token=${data.token}`
     };
 }
-
 
 export async function CloseSession(
     address: string,

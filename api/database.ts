@@ -26,7 +26,7 @@ export function getDefaultDomain(): string {
 export function getFrontendURL(): string {
     const address = localStorage.getItem('thinkmay_domain');
     if (address == null) return 'https://saigon2.thinkmay.net';
-    else return `https://${address}`;
+    else return `http://${address}`;
 }
 export const POCKETBASE = () => new PocketBase(getFrontendURL());
 export const GLOBAL = () =>
@@ -43,18 +43,19 @@ const value = {
     os: 'unknown',
     browser: 'unknown',
     resolution: {},
-    url: 'unknown',
+    url: 'unknown'
 };
 
-export let DevEnv = false
+export let DevEnv = false;
 if (typeof window != 'undefined') {
-    value.os= getOS()
-    value.browser= getBrowser()
-    value.resolution= getResolution()
-    value.url= window.location.href
-    
-    DevEnv = window.location.href.includes('localhost') ||
-    ValidateIPaddress(window.location.host.split(':')[0]);
+    value.os = getOS();
+    value.browser = getBrowser();
+    value.resolution = getResolution();
+    value.url = window.location.href;
+
+    DevEnv =
+        window.location.href.includes('localhost') ||
+        ValidateIPaddress(window.location.host.split(':')[0]);
 }
 
 let current_stack_length = 0;
@@ -64,7 +65,6 @@ export function UserEvents(content: { type: string; payload: any }) {
         timestamp: new Date().toISOString()
     });
 }
-
 
 export async function UserSession(email: string) {
     if (DevEnv) return;
