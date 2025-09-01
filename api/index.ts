@@ -76,16 +76,10 @@ async function internalSSE<T>(
 
     let result: T = null;
     if (feedback != undefined)
-        evtSource.onmessage = (ev) => feedback(JSON.parse(ev.data));
+        evtSource.onopen = () =>
+            (evtSource.onmessage = (ev) => feedback(JSON.parse(ev.data)));
 
-    let start = Date.now();
-    while (evtSource.readyState == evtSource.CONNECTING) {
-        if (Date.now() - start > 5000)
-            return new APIError('timeout 5s establish SSE');
-        await new Promise((r) => setTimeout(r, 100));
-    }
-
-    while (evtSource.readyState == evtSource.OPEN)
+    while (evtSource.readyState != evtSource.CLOSED)
         await new Promise((r) => setTimeout(r, 100));
 
     return result;
