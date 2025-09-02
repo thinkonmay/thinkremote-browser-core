@@ -60,7 +60,11 @@ async function internalSSE<T>(
     let result: T = null;
     if (feedback != undefined)
         evtSource.onopen = () =>
-            (evtSource.onmessage = (ev) => feedback(JSON.parse(ev.data)));
+            (evtSource.onmessage = (ev) => {
+                const data = JSON.parse(ev.data)
+                result = data
+                feedback(data)
+            });
 
     while (evtSource.readyState != evtSource.CLOSED)
         await new Promise((r) => setTimeout(r, 100));
