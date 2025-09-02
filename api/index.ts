@@ -76,35 +76,7 @@ async function internalSSE<T>(
     return result;
 }
 
-async function GetInfo(ip: string): Promise<Computer | APIError> {
-    const result = await internalFetch<Computer>(ip, 'info');
-    if (result instanceof APIError)
-        return await internalFetch<Computer>(ip, 'info');
-    else return result;
-}
 
-async function ClaimStorage(ip: string): Promise<string | APIError> {
-    const result = await internalFetch<string>(ip, 'addon/storage/claim');
-    return result;
-}
-async function ClaimSteam(ip: string): Promise<string | APIError> {
-    const result = await internalFetch<string>(ip, 'addon/steam/claim');
-    return result;
-}
-async function UnclaimStorage(
-    ip: string,
-    text: string
-): Promise<'success' | APIError> {
-    const result = await internalFetch<'success'>(ip, 'addon/storage/unclaim');
-    return result;
-}
-async function UnclaimSteam(
-    ip: string,
-    text: string
-): Promise<'success' | APIError> {
-    const result = await internalFetch<'success'>(ip, 'addon/steam/unclaim');
-    return result;
-}
 
 type Volume = {
     backing: 'os' | string;
@@ -203,7 +175,24 @@ type RemoteCredential = {
     dataUrl: string;
 };
 
-export async function StartThinkmay(
+
+const GetInfo = () => internalFetch<Computer>('info');
+const ClaimStorage = () => internalFetch<string>('addon/storage/claim');
+const ClaimSteam = () => internalFetch<string>('addon/steam/claim');
+const UnclaimStorage = () => internalFetch<void>('addon/storage/unclaim');
+const UnclaimSteam = () => internalFetch<void>('addon/steam/unclaim');
+const CloseSession = (req: Session) => internalFetch<Computer>('closed', req);
+const GetVmLog = (session: string) =>
+    internalFetch<string>(`log?target=${session}`);
+const CreateSession = async (session: Session) =>
+    internalFetch<Computer>('new', session);
+const ChangeTemplate = async (template: string, volume_id: string) =>
+    internalSSE<void>('reallocate', {
+        source: `${template}.template`,
+        id: volume_id
+    });
+
+async function StartThinkmay(
     vm_request: Computer,
     preferred_codec: 'h264' | 'h265',
     preferred_proto: 'quic' | 'udp',
@@ -235,22 +224,7 @@ export async function StartThinkmay(
     return res.info;
 }
 
-export async function CreateSession(
-    session: Session
-): Promise<Computer | APIError> {
-    return await internalFetch<Computer>('new', session);
-}
-
-export async function ChangeTemplate(
-    template: string,
-    volume_id: string
-): Promise<void | APIError> {
-    return await internalSSE<void>('reallocate', {
-        source: `${template}.template`,
-        id: volume_id
-    });
-}
-export function ParseRequest(
+function ParseRequest(
     session: Session,
     option?: {
         high_queue?: boolean;
@@ -279,16 +253,6 @@ export function ParseRequest(
     };
 }
 
-export async function CloseSession(req: Session): Promise<Computer | APIError> {
-    return internalFetch<Computer>('closed', req);
-}
-
-export async function GetVmLog(computer: Computer): Promise<string | APIError> {
-    const session = computer.Sessions.find((x) => x.vm != undefined)?.id;
-    if (!session) return new APIError('no session available');
-    return internalFetch<string>(`log?target=${session}`);
-}
-
 function getRemoteSession(computer: Computer): Session | undefined {
     if (computer.Sessions == undefined) return undefined;
     for (const session of computer.Sessions) {
@@ -306,13 +270,19 @@ function getRemoteSession(computer: Computer): Session | undefined {
 
 export {
     CAUSE,
+    ChangeTemplate,
     ClaimSteam,
     ClaimStorage,
+    CloseSession,
+    CreateSession,
     getFrontendURL,
     GetInfo,
     getRemoteSession,
+    GetVmLog,
     GLOBAL,
+    ParseRequest,
     POCKETBASE,
+    StartThinkmay,
     UnclaimSteam,
     UnclaimStorage
 };
