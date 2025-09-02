@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import PocketBase from 'pocketbase';
 import { ValidateIPaddress } from '.';
-import { getBrowser, getOS, getResolution } from '../core/utils/platform';
 
 export enum CAUSE {
     UNKNOWN,
@@ -35,81 +34,6 @@ export const GLOBAL = () =>
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzU0OTMxNjAwLCJleHAiOjE5MTI2OTgwMDB9.m7qcf4j3u1oPoqIsCqU3JHqYEO0DV2PmoPXGcdUAdR8'
     );
 
-let id = 'unknown';
-const stack: { content: any; timestamp: string }[] = [];
-const value = {
-    ip: 'unknown',
-    stack,
-    os: 'unknown',
-    browser: 'unknown',
-    resolution: {},
-    url: 'unknown'
-};
-
-export let DevEnv = false;
-if (typeof window != 'undefined') {
-    value.os = getOS();
-    value.browser = getBrowser();
-    value.resolution = getResolution();
-    value.url = window.location.href;
-
-    DevEnv =
-        window.location.href.includes('localhost') ||
-        ValidateIPaddress(window.location.host.split(':')[0]);
-}
-
-let current_stack_length = 0;
-export function UserEvents(content: { type: string; payload: any }) {
-    stack.push({
-        content,
-        timestamp: new Date().toISOString()
-    });
-}
-
-export async function UserSession(email: string) {
-    if (DevEnv) return;
-
-    try {
-        if (value.ip == 'unknown')
-            value.ip = (
-                await (await fetch('https://icanhazip.com/')).text()
-            ).replaceAll('\n', '');
-    } catch {}
-
-    const session = await (async () => {
-        if (id != 'unknown') return id;
-
-        const { data, error } = await GLOBAL()
-            .from('generic_events')
-            .insert({
-                value,
-                name: email ?? 'unknown',
-                type: 'ANALYTICS'
-            })
-            .select('id');
-        if (error || data?.length == 0) return id;
-        id = data[0].id;
-        return id;
-    })();
-
-    if (session == 'unknown') return;
-
-    const analytics_report = async () => {
-        if (stack.length == current_stack_length) return;
-
-        value.stack = stack;
-        await GLOBAL()
-            .from('generic_events')
-            .update({ value })
-            .eq('id', session);
-
-        current_stack_length = stack.length;
-    };
-
-    setTimeout(analytics_report, 5 * 1000);
-    setTimeout(analytics_report, 10 * 1000);
-    setTimeout(analytics_report, 20 * 1000);
-    setTimeout(analytics_report, 30 * 1000);
-    setTimeout(analytics_report, 45 * 1000);
-    setInterval(analytics_report, 60 * 1000);
-}
+export const DevEnv =
+    window.location.href.includes('localhost') ||
+    ValidateIPaddress(window.location.host.split(':')[0]);

@@ -1,13 +1,6 @@
 import { ClientResponseError } from 'pocketbase';
 import { v4 as uuidv4 } from 'uuid';
-import {
-    CAUSE,
-    getFrontendURL,
-    GLOBAL,
-    POCKETBASE,
-    UserEvents,
-    UserSession
-} from './database';
+import { CAUSE, getFrontendURL, GLOBAL, POCKETBASE } from './database';
 
 export function ValidateIPaddress(ipaddress: string) {
     return ipaddress != undefined
@@ -28,7 +21,6 @@ export class APIError {
 }
 
 async function internalFetch<T>(
-    address: string,
     command: string,
     body?: any
 ): Promise<T | APIError> {
@@ -62,14 +54,13 @@ async function internalFetch<T>(
 }
 
 async function internalSSE<T>(
-    address: string,
     command: string,
     body?: any,
     feedback?: (data: T) => Promise<void>
 ): Promise<T | APIError> {
     const pb = POCKETBASE();
 
-    const id = await internalFetch<string>(address, command, body);
+    const id = await internalFetch<string>(command, body);
     if (id instanceof APIError) return id;
 
     const evtSource = new EventSource(`${pb.baseURL}/${command}/sse?id=${id}`);
@@ -213,7 +204,6 @@ type RemoteCredential = {
 };
 
 export async function StartThinkmay(
-    address: string,
     vm_request: Computer,
     preferred_codec: 'h264' | 'h265',
     preferred_proto: 'quic' | 'udp',
@@ -237,7 +227,7 @@ export async function StartThinkmay(
         info?: Computer;
     };
 
-    const res = await internalSSE<newRes>(address, 'new', req, (res) =>
+    const res = await internalSSE<newRes>('new', req, (res) =>
         showStatus(res.status, res.code)
     );
     if (res instanceof APIError) return res;
@@ -246,37 +236,29 @@ export async function StartThinkmay(
 }
 
 export async function CreateSession(
-    address: string,
     session: Session
 ): Promise<Computer | APIError> {
-    return await internalFetch<Computer>(address, 'new', session);
+    return await internalFetch<Computer>('new', session);
 }
 
-export async function ChangeNode(
-    address: string,
-    node: string,
-    id: string
-): Promise<'success' | APIError> {
-    return await internalFetch<'success'>(address, 'transport', { id, node });
-}
 export async function ChangeTemplate(
-    address: string,
     template: string,
     volume_id: string
 ): Promise<void | APIError> {
-    return await internalSSE<void>(address, 'reallocate', {
+    return await internalSSE<void>('reallocate', {
         source: `${template}.template`,
         id: volume_id
     });
 }
 export function ParseRequest(
-    address: string,
     session: Session,
     option?: {
         high_queue?: boolean;
         high_mtu?: boolean;
     }
 ): RemoteCredential {
+    const address = new URL(POCKETBASE().baseURL).host;
+
     const {
         thinkmay: { audio, video, data, microphone }
     } = session;
@@ -290,33 +272,21 @@ export function ParseRequest(
     return {
         videoUrl: `wss://${address}:444/broadcasters/webrtc?token=${video.token}${opt}`,
         audioUrl: `wss://${address}:444/broadcasters/webrtc?token=${audio.token}`,
+        dataUrl: `wss://${address}:444/broadcasters/websocket?token=${data.token}`,
         microUrl: microphone
             ? `wss://${address}:444/broadcasters/microphone?token=${microphone.token}`
-            : undefined,
-        dataUrl: `wss://${address}:444/broadcasters/websocket?token=${data.token}`
+            : undefined
     };
 }
 
-export async function CloseSession(
-    address: string,
-    req: Session
-): Promise<Computer | APIError> {
-    return internalFetch<Computer>(address, 'closed', req);
+export async function CloseSession(req: Session): Promise<Computer | APIError> {
+    return internalFetch<Computer>('closed', req);
 }
 
-export async function GetVmLog(
-    address: string,
-    computer: Computer
-): Promise<string | APIError> {
+export async function GetVmLog(computer: Computer): Promise<string | APIError> {
     const session = computer.Sessions.find((x) => x.vm != undefined)?.id;
     if (!session) return new APIError('no session available');
-    return internalFetch<string>(address, `log?target=${session}`);
-}
-
-function getRandomInt(min: number, max: number) {
-    const minCeiled = Math.ceil(min);
-    const maxFloored = Math.floor(max);
-    return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled);
+    return internalFetch<string>(`log?target=${session}`);
 }
 
 function getRemoteSession(computer: Computer): Session | undefined {
@@ -344,8 +314,6 @@ export {
     GLOBAL,
     POCKETBASE,
     UnclaimSteam,
-    UnclaimStorage,
-    UserEvents,
-    UserSession
+    UnclaimStorage
 };
 export type { Computer, RemoteCredential, S3Credential, Session, Steam };
