@@ -2,14 +2,6 @@ import { ClientResponseError } from 'pocketbase';
 import { v4 as uuidv4 } from 'uuid';
 import { CAUSE, getFrontendURL, GLOBAL, POCKETBASE } from './database';
 
-export function ValidateIPaddress(ipaddress: string) {
-    return ipaddress != undefined
-        ? /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
-              ipaddress
-          )
-        : false;
-}
-
 export class APIError {
     code: number;
     message: string;
@@ -75,8 +67,6 @@ async function internalSSE<T>(
 
     return result;
 }
-
-
 
 type Volume = {
     backing: 'os' | string;
@@ -174,7 +164,6 @@ type RemoteCredential = {
     microUrl?: string;
     dataUrl: string;
 };
-
 
 const GetInfo = () => internalFetch<Computer>('info');
 const ClaimStorage = () => internalFetch<string>('addon/storage/claim');

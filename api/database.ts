@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import PocketBase from 'pocketbase';
-import { ValidateIPaddress } from '.';
 
 export enum CAUSE {
     UNKNOWN,
@@ -34,6 +33,13 @@ export const GLOBAL = () =>
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzU0OTMxNjAwLCJleHAiOjE5MTI2OTgwMDB9.m7qcf4j3u1oPoqIsCqU3JHqYEO0DV2PmoPXGcdUAdR8'
     );
 
+const validateIP = (ipaddress: string) =>
+    ipaddress != undefined
+        ? /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
+              ipaddress
+          )
+        : false;
+
 export const DevEnv =
     window.location.href.includes('localhost') ||
-    ValidateIPaddress(window.location.host.split(':')[0]);
+    validateIP(window.location.host.split(':')[0]);
