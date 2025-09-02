@@ -61,9 +61,9 @@ async function internalSSE<T>(
     if (feedback != undefined)
         evtSource.onopen = () =>
             (evtSource.onmessage = (ev) => {
-                const data = JSON.parse(ev.data)
-                result = data
-                feedback(data)
+                const data = JSON.parse(ev.data);
+                result = data;
+                feedback(data);
             });
 
     while (evtSource.readyState != evtSource.CLOSED)
@@ -113,15 +113,17 @@ type ProxyChain = {
     recvaddress: string;
 };
 
+type Listener = {
+    id: string;
+    content: string;
+    codec: string;
+    proto: string;
+};
+
 type RemoteReqeust = {
     requestedCodec: string;
     requestedProtocol: string;
-    displayRequired: boolean;
-
-    audio: ProxyChain;
-    video: ProxyChain;
-    microphone?: ProxyChain;
-    data: ProxyChain;
+    listener: Listener[];
 };
 
 type NDisk = {
@@ -148,12 +150,6 @@ type Backup = {};
 
 type Session = {
     id: string;
-
-    sunshine?: {
-        username: string;
-        password: string;
-        port: string;
-    };
     app?: Steam;
     s3bucket?: S3Credential;
     thinkmay?: RemoteReqeust;
@@ -197,7 +193,6 @@ async function StartThinkmay(
         app: {},
         s3bucket: {},
         thinkmay: {
-            displayRequired: true,
             requestedCodec: preferred_codec,
             requestedProtocol: preferred_proto
         }
@@ -218,6 +213,7 @@ async function StartThinkmay(
 }
 
 function ParseRequest(
+    vmid: string,
     session: Session,
     option?: {
         high_queue?: boolean;
@@ -227,25 +223,51 @@ function ParseRequest(
     const address = new URL(POCKETBASE().baseURL).host;
 
     const {
-        thinkmay: { audio, video, data, microphone }
+        thinkmay: { listener }
     } = session;
     const { high_queue, high_mtu } = option ?? {
         high_mtu: false,
         high_queue: true
     };
-    const opt = `&queue_size=${high_queue ? 64 : 16}&mtu=${
+    const opt = `&vmid=${vmid}&queue_size=${high_queue ? 64 : 16}&mtu=${
         high_mtu ? 1400 : 1200
     }`;
-    return {
-        videoUrl: `wss://${address}:444/broadcasters/webrtc?token=${video.token}${opt}`,
-        audioUrl: `wss://${address}:444/broadcasters/webrtc?token=${audio.token}`,
-        dataUrl: `wss://${address}:444/broadcasters/websocket?token=${data.token}`,
-        microUrl: microphone
-            ? `wss://${address}:444/broadcasters/microphone?token=${microphone.token}`
-            : undefined
+
+    const result: RemoteCredential = {
+        videoUrl: '',
+        audioUrl: '',
+        dataUrl: ''
     };
+
+    listener.forEach(({ id, content }) => {
+        switch (content) {
+            case 'video':
+                result.videoUrl = `wss://${address}:444/broadcasters/webrtc/recvonly?&token=${id}${opt}`;
+                break;
+            case 'audio':
+                result.audioUrl = `wss://${address}:444/broadcasters/webrtc/recvonly?token=${id}${opt}`;
+                break;
+            case 'hid':
+                result.dataUrl = `wss://${address}:444/broadcasters/websocket?token=${id}${opt}`;
+                break;
+            case 'microphone':
+                result.dataUrl = `wss://${address}:444/broadcasters/webrtc/sendonly?token=${id}${opt}`;
+                break;
+            default:
+                break;
+        }
+    });
+
+    return result;
 }
 
+function getVmSession(computer: Computer): Session | undefined {
+    if (computer.Sessions == undefined) return undefined;
+    for (const session of computer.Sessions)
+        if (session.vm != undefined) return session;
+
+    return undefined;
+}
 function getRemoteSession(computer: Computer): Session | undefined {
     if (computer.Sessions == undefined) return undefined;
     for (const session of computer.Sessions) {
@@ -274,6 +296,7 @@ export {
     GetVmLog,
     GLOBAL,
     ParseRequest,
+    getVmSession,
     POCKETBASE,
     StartThinkmay,
     UnclaimSteam,
