@@ -16,32 +16,24 @@ async function internalFetch<T>(
     command: string,
     body?: any
 ): Promise<T | APIError> {
-    const pb = POCKETBASE();
-    if (command == 'info') {
-        try {
-            return await pb.send<T>(command, {
-                method: 'GET'
-            });
-        } catch (e) {
-            const cre = e as ClientResponseError;
-            return new APIError(
-                cre.message ?? 'Unknown error',
-                cre.status ?? 500
-            );
-        }
-    } else {
-        try {
-            return await pb.send<T>(command, {
-                method: 'POST',
-                body: body ?? {}
-            });
-        } catch (e) {
-            const cre = e as ClientResponseError;
-            return new APIError(
-                cre.message ?? 'Unknown error',
-                cre.status ?? 500
-            );
-        }
+    const methodMap = {
+        new: 'POST',
+        reallocate: 'POST',
+        close: 'DELETE',
+        info: 'GET',
+        storage: 'GET',
+        steam: 'GET',
+        resource: 'DELETE'
+    };
+
+    try {
+        return await POCKETBASE().send<T>(command, {
+            method: methodMap[command] ?? 'POST',
+            body: body
+        });
+    } catch (e) {
+        const cre = e as ClientResponseError;
+        return new APIError(cre.message ?? 'Unknown error', cre.status ?? 500);
     }
 }
 
@@ -166,11 +158,10 @@ type RemoteCredential = {
 };
 
 const GetInfo = () => internalFetch<Computer>('info');
-const ClaimStorage = () => internalFetch<string>('addon/storage/claim');
-const ClaimSteam = () => internalFetch<string>('addon/steam/claim');
-const UnclaimStorage = () => internalFetch<void>('addon/storage/unclaim');
-const UnclaimSteam = () => internalFetch<void>('addon/steam/unclaim');
-const CloseSession = (req: Session) => internalFetch<Computer>('closed', req);
+const ClaimStorage = () => internalFetch<string>('storage');
+const ClaimSteam = () => internalFetch<string>('steam');
+const UnclaimResource = () => internalFetch<void>('resource');
+const CloseSession = (req: Session) => internalFetch<Computer>('close', req);
 const GetVmLog = (session: string) =>
     internalFetch<string>(`log?target=${session}`);
 const CreateSession = async (session: Session) =>
@@ -294,12 +285,11 @@ export {
     GetInfo,
     getRemoteSession,
     GetVmLog,
+    getVmSession,
     GLOBAL,
     ParseRequest,
-    getVmSession,
     POCKETBASE,
     StartThinkmay,
-    UnclaimSteam,
-    UnclaimStorage
+    UnclaimResource
 };
 export type { Computer, RemoteCredential, S3Credential, Session, Steam };
