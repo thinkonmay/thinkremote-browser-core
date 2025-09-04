@@ -181,8 +181,6 @@ async function StartThinkmay(
     const req = {
         id: uuidv4(),
         vm: vm_request,
-        app: {},
-        s3bucket: {},
         thinkmay: {
             requestedCodec: preferred_codec,
             requestedProtocol: preferred_proto
