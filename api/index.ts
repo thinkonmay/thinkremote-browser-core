@@ -231,16 +231,16 @@ function ParseRequest(
     listener.forEach(({ id, content }) => {
         switch (content) {
             case 'video':
-                result.videoUrl = `wss://${address}:444/broadcasters/webrtc/recvonly?&token=${id}${opt}`;
+                result.videoUrl = `wss://${address}:444/broadcasters/webrtc/recvonly?&token=${id}${opt}&codec=h264`;
                 break;
             case 'audio':
-                result.audioUrl = `wss://${address}:444/broadcasters/webrtc/recvonly?token=${id}${opt}`;
+                result.audioUrl = `wss://${address}:444/broadcasters/webrtc/recvonly?token=${id}${opt}&codec=opus`;
                 break;
             case 'hid':
                 result.dataUrl = `wss://${address}:444/broadcasters/websocket?token=${id}${opt}`;
                 break;
             case 'microphone':
-                result.dataUrl = `wss://${address}:444/broadcasters/webrtc/sendonly?token=${id}${opt}`;
+                result.microUrl = `wss://${address}:444/broadcasters/webrtc/sendonly?token=${id}${opt}`;
                 break;
             default:
                 break;

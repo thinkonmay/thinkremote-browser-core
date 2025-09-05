@@ -24,7 +24,7 @@ export function getDefaultDomain(): string {
 export function getFrontendURL(): string {
     const address = localStorage.getItem('thinkmay_domain');
     if (address == null) return 'https://saigon2.thinkmay.net';
-    else return `http://${address}`;
+    else return `https://${address}`;
 }
 export const POCKETBASE = () => new PocketBase(getFrontendURL());
 export const GLOBAL = () =>
