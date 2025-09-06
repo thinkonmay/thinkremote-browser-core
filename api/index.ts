@@ -25,7 +25,7 @@ async function internalFetch<T>(
         steam: 'GET',
         resource: 'DELETE',
         log: 'GET',
-        analytics: 'GET',
+        analytics: 'GET'
     };
 
     try {
@@ -213,7 +213,7 @@ function ParseRequest(
     const address = new URL(POCKETBASE().baseURL).host;
 
     const {
-        thinkmay: { listener }
+        thinkmay: { requestedCodec, listener }
     } = session;
     const { high_queue, high_mtu } = option ?? {
         high_mtu: false,
@@ -232,7 +232,7 @@ function ParseRequest(
     listener.forEach(({ id, content }) => {
         switch (content) {
             case 'video':
-                result.videoUrl = `wss://${address}:444/broadcasters/webrtc/recvonly?&token=${id}${opt}&codec=h264`;
+                result.videoUrl = `wss://${address}:444/broadcasters/webrtc/recvonly?&token=${id}${opt}&codec=${requestedCodec}`;
                 break;
             case 'audio':
                 result.audioUrl = `wss://${address}:444/broadcasters/webrtc/recvonly?token=${id}${opt}&codec=opus`;
