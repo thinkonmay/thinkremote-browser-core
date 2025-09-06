@@ -23,7 +23,9 @@ async function internalFetch<T>(
         info: 'GET',
         storage: 'GET',
         steam: 'GET',
-        resource: 'DELETE'
+        resource: 'DELETE',
+        log: 'GET',
+        analytics: 'GET',
     };
 
     try {
@@ -162,8 +164,7 @@ const ClaimStorage = () => internalFetch<string>('storage');
 const ClaimSteam = () => internalFetch<string>('steam');
 const UnclaimResource = () => internalFetch<void>('resource');
 const CloseSession = (req: Session) => internalFetch<Computer>('close', req);
-const GetVmLog = (session: string) =>
-    internalFetch<string>(`log?target=${session}`);
+const GetVmLog = (session: string) => internalFetch<string>('log', session);
 const CreateSession = async (session: Session) =>
     internalFetch<Computer>('new', session);
 const ChangeTemplate = async (template: string, volume_id: string) =>
