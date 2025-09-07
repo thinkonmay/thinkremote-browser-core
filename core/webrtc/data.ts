@@ -3,6 +3,7 @@ import { EventCode } from '..';
 export class DataRTC {
     public connected: boolean;
     public closed: boolean;
+    public index: number = 0;
 
     private closeHandler: () => void;
     private ws: WebSocket;
@@ -36,14 +37,25 @@ export class DataRTC {
     public Send(type: EventCode, ...arr: number[]) {
         if (this.closed) return;
 
-        this.ws.send(new Uint32Array([type, ...arr]).buffer);
+        this.ws.send(new Uint32Array([this.index, type, ...arr]).buffer);
+        this.index++;
     }
     public SendClipboard(val: string) {
         if (this.closed) return;
 
         const buff = new TextEncoder().encode(btoa(val));
-        const first = new Uint8Array([EventCode.cs, 0, 0, 0]);
+        const first = new Uint8Array([
+            this.index,
+            0,
+            0,
+            0,
+            EventCode.cs,
+            0,
+            0,
+            0
+        ]);
         this.ws.send(this.concatTypedArrays(first, buff).buffer);
+        this.index++;
     }
 
     private concatTypedArrays(a: Uint8Array, b: Uint8Array): Uint8Array {
