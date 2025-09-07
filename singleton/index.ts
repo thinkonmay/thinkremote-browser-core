@@ -1,6 +1,10 @@
 import { EventCode, RemoteDesktopClient } from '../core';
 
 let HQ = false;
+export const MAX_FRAMERATE = 120; //240
+export const MIN_FRAMERATE = 40;
+let CLIENT: RemoteDesktopClient | undefined = undefined;
+
 export const set_hq = (val: boolean) => (HQ = val);
 export const MAX_BITRATE = () =>
     Math.round(
@@ -9,10 +13,7 @@ export const MAX_BITRATE = () =>
     );
 export const MIN_BITRATE = () =>
     Math.round((500 / (1920 * 1080)) * (CLIENT ? CLIENT.Size() : 1920 * 1080));
-export const MAX_FRAMERATE = 120; //240
-export const MIN_FRAMERATE = 40;
 
-export let CLIENT: RemoteDesktopClient | undefined = undefined;
 export const Assign = (client: RemoteDesktopClient) => {
     if (CLIENT) CLIENT.Close();
     CLIENT = client;
@@ -60,3 +61,16 @@ export const keyboard = (...vals: { val: string; isDown?: boolean }[]) =>
             jsKey: val
         }))
     );
+
+export const Size = () => CLIENT?.Size();
+export const NotReady = () => CLIENT == undefined || !CLIENT?.Ready();
+export const CloseStreaming = () => CLIENT?.Close();
+export const AuthFailed = () => CLIENT?.AuthFailed();
+export const ResetKeyStuck = () => CLIENT?.ResetKeyStuck();
+export const GetAudioMetric = () => CLIENT?.Metrics.audio;
+export const GetVideoMetric = () => CLIENT?.Metrics.video;
+export const ChangeBitrate = (b: number) => CLIENT?.ChangeBitrate(b);
+export const ChangeFramerate = (b: number) => CLIENT?.ChangeFramerate(b);
+export const SetClipboard = (val: string) => CLIENT?.SetClipboard(val);
+export const SetScancode = (val: boolean) => CLIENT?.SetScancode(val);
+export const PointerVisible = (val: boolean) => CLIENT?.PointerVisible(val);
