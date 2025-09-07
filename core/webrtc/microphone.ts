@@ -1,16 +1,15 @@
-import { Log, LogLevel } from '../utils/log';
 import { MessageType } from './media';
 
 export class MicrophoneRTC {
     public connected: boolean;
     public closed: boolean;
+    public authFailure: boolean;
 
     private ws: WebSocket;
     private Conn: RTCPeerConnection;
     private host: string;
     private pending_ices: RTCIceCandidateInit[];
     private has_rsdp: boolean;
-    private microphone: boolean;
 
     private closeHandler: () => void;
     private sendHandler: (data: { event: string; data: any }) => void;
@@ -18,6 +17,7 @@ export class MicrophoneRTC {
     constructor(url: string, CloseHandler: () => void) {
         this.closed = false;
         this.connected = false;
+        this.authFailure = false;
         this.pending_ices = [];
         this.has_rsdp = false;
         this.closeHandler = CloseHandler;
@@ -56,13 +56,25 @@ export class MicrophoneRTC {
     }
 
     private async handleIncomingPacket(ev: MessageEvent) {
-        const txt = await (ev.data as Blob).text();
-        const { event, data } = JSON.parse(txt) as {
-            event: string;
-            data: any;
-        };
+        const result = JSON.parse(await (ev.data as Blob).text()) as
+            | {
+                  type: 'application error';
+                  code: number;
+                  message: string;
+                  event: undefined;
+                  data: undefined;
+              }
+            | {
+                  type: undefined;
+                  code: undefined;
+                  event: string;
+                  data: any;
+              };
 
-        try {
+        if (result.type == 'application error') {
+            this.authFailure = true;
+        } else {
+            const { event, data } = result;
             switch (event) {
                 case 'sdp':
                     this.has_rsdp = true;
@@ -94,8 +106,6 @@ export class MicrophoneRTC {
                 default:
                     break;
             }
-        } catch (err) {
-            Log(LogLevel.Error, err);
         }
     }
 

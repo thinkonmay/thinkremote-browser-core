@@ -26,7 +26,7 @@ export class DataRTC {
         };
     }
 
-    public Close() {
+    public Close(ev?: Event) {
         this.closed = true;
 
         const close = this.closeHandler;
@@ -59,7 +59,6 @@ export class DataRTC {
     }
 
     private concatTypedArrays(a: Uint8Array, b: Uint8Array): Uint8Array {
-        // a, b TypedArray of same type
         var c = new Uint8Array(a.length + b.length);
         c.set(a, 0);
         c.set(b, a.length);

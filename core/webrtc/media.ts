@@ -1,4 +1,3 @@
-import { Log, LogLevel } from '../utils/log';
 import { getBrowser } from '../utils/platform';
 
 export enum MessageType {
@@ -132,21 +131,25 @@ export class MediaRTC {
     }
 
     private async handleIncomingPacket(ev: MessageEvent) {
-        let result = {};
-        const txt = await (ev.data as Blob).text();
-        try {
-            result = JSON.parse(txt);
-        } catch {
-            if (txt.includes('invalid key')) this.authFailure = true;
-            return;
-        }
+        const result = JSON.parse(await (ev.data as Blob).text()) as
+            | {
+                  type: 'application error';
+                  code: number;
+                  message: string;
+                  event: undefined;
+                  data: undefined;
+              }
+            | {
+                  type: undefined;
+                  code: undefined;
+                  event: string;
+                  data: any;
+              };
 
-        this.authFailure = false;
-        const { event, data } = result as {
-            event: string;
-            data: any;
-        };
-        try {
+        if (result.type == 'application error') {
+            this.authFailure = true;
+        } else {
+            const { event, data } = result;
             switch (event) {
                 case 'sdp':
                     const ans = await this.onIncomingSDP(data);
@@ -179,8 +182,6 @@ export class MediaRTC {
                 default:
                     break;
             }
-        } catch (err) {
-            Log(LogLevel.Error, err);
         }
     }
 

@@ -92,7 +92,7 @@ class Thinkmay {
         return this.Metrics.video.status == 'connected';
     }
     public authFailed(): boolean {
-        return this.videoConn.authFailure;
+        return this.videoConn.authFailure || this.audioConn.authFailure;
     }
 
     video: VideoWrapper;
