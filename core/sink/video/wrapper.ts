@@ -1,4 +1,4 @@
-import { Log, LogLevel } from '../../../utils/log';
+import { Log, LogLevel } from '../../utils/log';
 
 export class VideoWrapper {
     private video: HTMLVideoElement;

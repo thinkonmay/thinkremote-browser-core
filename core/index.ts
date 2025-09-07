@@ -1,8 +1,9 @@
 import { HID } from './hid/hid';
 import { TouchHandler } from './hid/touch';
 import { EventCode, HIDMsg } from './models/keys.model';
-import { AudioWrapper } from './pipeline/sink/audio/wrapper';
-import { VideoWrapper } from './pipeline/sink/video/wrapper';
+import { Metric, initialMetric } from './models/metrics.model';
+import { AudioWrapper } from './sink/audio/wrapper';
+import { VideoWrapper } from './sink/video/wrapper';
 import { convertJSKey, useShift } from './utils/convert';
 import { AddNotifier, ConnectionEvent, Log, LogLevel } from './utils/log';
 import { getBrowser, isMobile } from './utils/platform';
@@ -10,95 +11,22 @@ import { DataRTC } from './webrtc/data';
 import { MediaRTC, MessageType, RTCMetric } from './webrtc/media';
 import { MicrophoneRTC } from './webrtc/microphone';
 
-type Metric = {
-    video: {
-        status: 'close' | 'connecting' | 'connected';
-        timestamp: Date;
-        idrcount: {
-            last: number;
-            current: number;
-        };
-        packetloss: {
-            last: number;
-            current: number;
-        };
-        bitrate: {
-            total: number;
-            persecond: number;
-        };
-        frame: {
-            totalframes: number;
-            totalframedelay: number;
-            totaldecodetime: number;
-
-            persecond: number;
-            decodetime: number;
-            delay: number;
-        };
-    };
-    data: {
-        status: 'close' | 'connecting' | 'connected';
-    };
-    audio: {
-        status: 'close' | 'connecting' | 'connected';
-
-        sample: {
-            received: number;
-        };
-    };
-};
-const initialMetric: Metric = {
-    data: {
-        status: 'close' as 'close' | 'connecting' | 'connected'
-    },
-    audio: {
-        status: 'close' as 'close' | 'connecting' | 'connected',
-
-        sample: {
-            received: 0
-        }
-    },
-    video: {
-        status: 'close' as 'close' | 'connecting' | 'connected',
-        timestamp: new Date(),
-        idrcount: {
-            current: 0,
-            last: 0
-        },
-        bitrate: {
-            persecond: 0,
-            total: 0
-        },
-        frame: {
-            totaldecodetime: 0,
-            totalframes: 0,
-            totalframedelay: 0,
-            persecond: 0,
-            delay: 0,
-            decodetime: 0
-        },
-        packetloss: {
-            current: 0,
-            last: 0
-        }
-    }
-};
-
 class Thinkmay {
-    public hid: HID;
-    public touch: TouchHandler;
     public Metrics: Metric;
-    public ready(): boolean {
-        return this.Metrics.video.status == 'connected';
-    }
-    public authFailed(): boolean {
-        return this.videoConn.authFailure || this.audioConn.authFailure;
-    }
 
-    video: VideoWrapper;
-    audio: AudioWrapper;
-    dataUrl: string;
-    micUrl: string;
+    private touch: TouchHandler;
+    private hid: HID;
+    private video: VideoWrapper;
+    private audio: AudioWrapper;
+    private dataUrl: string;
+    private micUrl: string;
+
+    private videoConn: MediaRTC;
+    private audioConn: MediaRTC;
+    private microConn: MicrophoneRTC;
+    private dataConn: DataRTC;
+    private closed: boolean;
+    private gid = 0;
 
     constructor(
         vid: VideoWrapper,
@@ -119,8 +47,8 @@ class Thinkmay {
         Log(LogLevel.Infor, `Started remote desktop connection`);
         this.audioEstablishmentLoop();
         this.videoEstablishmentLoop();
-        if (this.micUrl) this.microphoneEstablishmentLoop();
         this.dataEstablishmentLoop();
+        if (this.micUrl) this.microphoneEstablishmentLoop();
     }
 
     private static Now = () => new Date().getTime();
@@ -130,13 +58,6 @@ class Thinkmay {
         if (this.missing_frame != undefined) clearTimeout(this.missing_frame);
         this.missing_frame = setTimeout(this.ResetVideo.bind(this), 1000);
     }
-
-    private videoConn: MediaRTC;
-    private audioConn: MediaRTC;
-    private microConn: MicrophoneRTC;
-    private dataConn: DataRTC;
-    private closed: boolean;
-    private gid = 0;
 
     private async audioTransform(
         encodedFrame: RTCEncodedAudioFrame,
@@ -202,57 +123,6 @@ class Thinkmay {
         Log(LogLevel.Infor, `Incoming ${evt.track.kind} stream`);
         await this.audio.assign(stream);
         await this.audio.play();
-    }
-
-    public async ChangeFramerate(framerate: number) {
-        if (this.closed) return;
-        else if (!this.videoConn.connected)
-            setTimeout(() => this.ChangeFramerate(framerate), 1000);
-        this.videoConn.Send(MessageType.Framerate, framerate);
-        Log(LogLevel.Infor, `changing framerate to ${framerate}`);
-    }
-    public async ChangeBitrate(bitrate: number) {
-        if (this.closed) return;
-        else if (!this.videoConn.connected)
-            setTimeout(() => this.ChangeBitrate(bitrate), 1000);
-        this.videoConn.Send(MessageType.Bitrate, Math.round(bitrate / 1000));
-        Log(LogLevel.Infor, `changing bitrate to ${bitrate}`);
-    }
-
-    public async PointerVisible(enable: boolean) {
-        if (this.closed) return;
-        else if (!this.videoConn.connected)
-            setTimeout(() => this.PointerVisible(enable), 1000);
-        this.videoConn.Send(MessageType.Pointer, enable ? 1 : 0);
-    }
-
-    public async ResetVideo() {
-        if (this.closed) return;
-        else if (!this.videoConn.connected) return;
-        this.videoConn.Send(MessageType.Idr, 1);
-    }
-
-    public async HardReset() {
-        if (this.closed) return;
-        this.videoConn?.Close();
-        this.audioConn?.Close();
-        this.dataConn?.Close();
-        this.microConn?.Close();
-        this.Metrics.audio.status = 'close';
-        this.Metrics.video.status = 'close';
-    }
-
-    async SendRawHID(...data: HIDMsg[]) {
-        if (this.closed) return;
-        for (const element of data) {
-            if (element.convertType() == EventCode.cs)
-                this.dataConn.SendClipboard(element.data.val);
-            else this.dataConn.Send(element.convertType(), ...element.buffer());
-        }
-    }
-    public async SetClipboard(val: string) {
-        if (this.closed) return;
-        await this.SendRawHID(new HIDMsg(EventCode.cs, { val }));
     }
 
     private send = (...val: HIDMsg[]) => this.SendRawHID(...val);
@@ -389,6 +259,15 @@ class Thinkmay {
         );
     };
 
+    public Ready = () => this.Metrics.video.status == 'connected';
+    public AuthFailed = () =>
+        this.videoConn.authFailure || this.audioConn.authFailure;
+    public Size = () =>
+        this.video.internal().videoHeight * this.video.internal().videoWidth;
+
+    public SetClipboard = (val: string) =>
+        this.SendRawHID(new HIDMsg(EventCode.cs, { val }));
+
     public MouseButtonDown = (event: { button: number }) =>
         this.SendRawHID(
             new HIDMsg(EventCode.md, {
@@ -443,6 +322,56 @@ class Thinkmay {
                       }
             )
         );
+    public ResetKeyStuck = () => this.hid.ResetKeyStuck();
+    public SetScancode = (val: boolean) => (this.hid.scancode = val);
+    public GetScancode = () => this.hid.scancode;
+
+    public async ChangeFramerate(framerate: number) {
+        if (this.closed) return;
+        else if (!this.videoConn.connected)
+            setTimeout(() => this.ChangeFramerate(framerate), 1000);
+        this.videoConn.Send(MessageType.Framerate, framerate);
+        Log(LogLevel.Infor, `changing framerate to ${framerate}`);
+    }
+    public async ChangeBitrate(bitrate: number) {
+        if (this.closed) return;
+        else if (!this.videoConn.connected)
+            setTimeout(() => this.ChangeBitrate(bitrate), 1000);
+        this.videoConn.Send(MessageType.Bitrate, Math.round(bitrate / 1000));
+        Log(LogLevel.Infor, `changing bitrate to ${bitrate}`);
+    }
+
+    public async PointerVisible(enable: boolean) {
+        if (this.closed) return;
+        else if (!this.videoConn.connected)
+            setTimeout(() => this.PointerVisible(enable), 1000);
+        this.videoConn.Send(MessageType.Pointer, enable ? 1 : 0);
+    }
+
+    public async ResetVideo() {
+        if (this.closed) return;
+        else if (!this.videoConn.connected) return;
+        this.videoConn.Send(MessageType.Idr, 1);
+    }
+
+    public async HardReset() {
+        if (this.closed) return;
+        this.videoConn?.Close();
+        this.audioConn?.Close();
+        this.dataConn?.Close();
+        this.microConn?.Close();
+        this.Metrics.audio.status = 'close';
+        this.Metrics.video.status = 'close';
+    }
+
+    async SendRawHID(...data: HIDMsg[]) {
+        if (this.closed) return;
+        for (const element of data) {
+            if (element.convertType() == EventCode.cs)
+                this.dataConn.SendClipboard(element.data.val);
+            else this.dataConn.Send(element.convertType(), ...element.buffer());
+        }
+    }
 
     public Close() {
         this.closed = true;
@@ -463,8 +392,8 @@ export {
     AudioWrapper,
     ConnectionEvent,
     EventCode,
-    isMobile,
     Thinkmay as RemoteDesktopClient,
-    useShift,
-    VideoWrapper
+    VideoWrapper,
+    isMobile,
+    useShift
 };
