@@ -6,7 +6,7 @@ import { AudioWrapper } from './sink/audio/wrapper';
 import { VideoWrapper } from './sink/video/wrapper';
 import { convertJSKey, useShift } from './utils/convert';
 import { AddNotifier, ConnectionEvent, Log, LogLevel } from './utils/log';
-import { getBrowser, isMobile } from './utils/platform';
+import { getBrowser, getOS, isMobile } from './utils/platform';
 import { DataRTC } from './webrtc/data';
 import { MediaRTC, MessageType, RTCMetric } from './webrtc/media';
 import { MicrophoneRTC } from './webrtc/microphone';
@@ -395,5 +395,7 @@ export {
     Thinkmay as RemoteDesktopClient,
     VideoWrapper,
     isMobile,
+    getBrowser,
+    getOS,
     useShift
 };
