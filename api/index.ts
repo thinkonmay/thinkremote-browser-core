@@ -42,7 +42,8 @@ async function internalFetch<T>(
 async function internalSSE<T>(
     command: string,
     body?: any,
-    feedback?: (data: T) => Promise<void>
+    feedback?: (data: T) => Promise<void>,
+    callback?: (data: EventSource) => void
 ): Promise<T | APIError> {
     const pb = POCKETBASE();
 
@@ -50,6 +51,7 @@ async function internalSSE<T>(
     if (id instanceof APIError) return id;
 
     const evtSource = new EventSource(`${pb.baseURL}/${command}/sse?id=${id}`);
+    if (callback) callback(evtSource);
 
     let result: T = null;
     if (feedback != undefined)
@@ -173,6 +175,8 @@ const ChangeTemplate = async (template: string, volume_id: string) =>
         id: volume_id
     });
 
+let deploymentES: EventSource | undefined = undefined;
+const CancelDeployment = () => deploymentES?.close();
 async function StartThinkmay(
     vm_request: Computer,
     preferred_codec: 'h264' | 'h265',
@@ -194,9 +198,13 @@ async function StartThinkmay(
         info?: Computer;
     };
 
-    const res = await internalSSE<newRes>('new', req, (res) =>
-        showStatus(res.status, res.code)
+    const res = await internalSSE<newRes>(
+        'new',
+        req,
+        (res) => showStatus(res.status, res.code),
+        (es) => (deploymentES = es)
     );
+    deploymentES = undefined;
     if (res instanceof APIError) return res;
 
     return res.info;
@@ -289,6 +297,7 @@ export {
     ParseRequest,
     POCKETBASE,
     StartThinkmay,
-    UnclaimResource
+    UnclaimResource,
+    CancelDeployment
 };
 export type { Computer, RemoteCredential, S3Credential, Session, Steam };
