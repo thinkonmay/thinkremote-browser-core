@@ -19,6 +19,13 @@ export class HID {
     private intervals: any[];
     private video: HTMLVideoElement;
 
+    private onwheel = this.mouseWheel.bind(this);
+    private onmousemove = this.mouseButtonMovement.bind(this);
+    private onkeydown = this.keydown.bind(this);
+    private onkeyup = this.keyup.bind(this);
+    private onmousedown = this.MouseButtonDown.bind(this);
+    private onmouseup = this.MouseButtonUp.bind(this);
+
     constructor(
         Sendfunc: (...data: HIDMsg[]) => Promise<void>,
         video?: HTMLVideoElement
@@ -44,16 +51,16 @@ export class HID {
         /**
          * video event
          */
-        this.video.onmousedown = this.mouseButtonDown.bind(this);
-        this.video.onmouseup = this.mouseButtonUp.bind(this);
+        this.video.addEventListener('mousedown', this.onmousedown);
+        this.video.addEventListener('mouseup', this.onmouseup);
 
         /**
          * document event
          */
-        document.onwheel = this.mouseWheel.bind(this);
-        document.onmousemove = this.mouseButtonMovement.bind(this);
-        document.onkeydown = this.keydown.bind(this);
-        document.onkeyup = this.keyup.bind(this);
+        document.addEventListener('wheel', this.onwheel);
+        document.addEventListener('mousemove', this.onmousemove);
+        document.addEventListener('keydown', this.onkeydown);
+        document.addEventListener('keyup', this.onkeyup);
 
         /**
          * gamepad stuff
@@ -90,11 +97,12 @@ export class HID {
         this.intervals.forEach((x) => clearInterval(x));
         this.disable = true;
         this.closed = true;
-        document.onwheel = null;
-        document.onmousemove = null;
-        document.onmousedown = null;
-        document.onmouseup = null;
-        document.onkeydown = null;
+        this.video.removeEventListener('mousedown', this.onmousedown);
+        this.video.removeEventListener('mouseup', this.onmouseup);
+        document.removeEventListener('wheel', this.onwheel);
+        document.removeEventListener('mousemove', this.onmousemove);
+        document.removeEventListener('keydown', this.onkeydown);
+        document.removeEventListener('keyup', this.onkeyup);
     }
 
     public last_active = (): number =>
@@ -168,14 +176,10 @@ export class HID {
         return gamepads.length == 0 ? 1000 : 30;
     }
 
-    public ResetKeyStuck = () =>
-        this.SendFunc(new HIDMsg(EventCode.kr, {}));
+    public ResetKeyStuck = () => this.SendFunc(new HIDMsg(EventCode.kr, {}));
 
     private async keydown(event: KeyboardEvent) {
-        this.last_interact = new Date();
         event.preventDefault();
-        if (event.key == 'Meta') return;
-
         const key = convertJSKey(event.key, event.location);
         if (key == undefined) return;
 
@@ -183,12 +187,10 @@ export class HID {
         if (this.scancode) code += 2;
         await this.SendFunc(new HIDMsg(code, { key }));
         this.pressing_keys.push(key);
+        this.last_interact = new Date();
     }
     private async keyup(event: KeyboardEvent) {
         event.preventDefault();
-
-        if (event.key == 'Meta') return;
-
         const key = convertJSKey(event.key, event.location);
         if (key == undefined) return;
 
@@ -215,9 +217,6 @@ export class HID {
         );
     }
     private async mouseButtonMovement(event: MouseEvent) {
-        this.last_interact = new Date();
-        if (event.target != this.video) return;
-
         if (!this.relativeMouse) {
             await this.SendFunc(
                 new HIDMsg(EventCode.mma, {
@@ -233,12 +232,7 @@ export class HID {
                 })
             );
         }
-    }
-    private mouseButtonDown(event: MouseEvent) {
-        this.MouseButtonDown(event);
-    }
-    private mouseButtonUp(event: MouseEvent) {
-        this.MouseButtonUp(event);
+        this.last_interact = new Date();
     }
 
     public async MouseButtonDown(event: { button: number }) {

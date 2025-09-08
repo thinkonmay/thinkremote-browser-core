@@ -62,6 +62,8 @@ export const keyboard = (...vals: { val: string; isDown?: boolean }[]) =>
     );
 
 export const Size = () => CLIENT?.Size();
+export const ClientAvailable = () => CLIENT != undefined;
+export const Connected = () => CLIENT?.Ready() ?? false;
 export const NotReady = () => CLIENT == undefined || !CLIENT?.Ready();
 export const CloseStreaming = () => CLIENT?.Close();
 export const AuthFailed = () => CLIENT?.AuthFailed();

@@ -95,14 +95,12 @@ export class MediaRTC {
         this.sendHandler = () => {};
 
         this.host = new URL(url).hostname;
-        try {
-            this.ws = new WebSocket(url);
-        } catch (err) {
-            this.Close();
-        }
-        this.ws.onerror = this.Close.bind(this);
-        this.ws.onclose = this.Close.bind(this);
-        this.ws.onopen = () => {
+
+        const ws = new WebSocket(url);
+        ws.onopen = () => {
+            this.ws = ws;
+            this.ws.onerror = this.Close.bind(this);
+            this.ws.onclose = this.Close.bind(this);
             this.sendHandler = (data) =>
                 this.ws.send(
                     new Blob([JSON.stringify(data)], { type: 'text/plain' })

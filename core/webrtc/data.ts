@@ -16,10 +16,9 @@ export class DataRTC {
         this.closed = false;
         this.closeHandler = closeHandler;
 
-        try {
-            this.ws = new WebSocket(url);
-        } catch {}
-        this.ws.onopen = async () => {
+        const ws = new WebSocket(url);
+        ws.onopen = () => {
+            this.ws = ws;
             this.ws.onerror = this.Close.bind(this);
             this.ws.onclose = this.Close.bind(this);
             this.ws.onmessage = (e) => messageHandler(e.data);
@@ -37,7 +36,7 @@ export class DataRTC {
     public Send(type: EventCode, ...arr: number[]) {
         if (this.closed) return;
 
-        this.ws.send(new Uint32Array([this.index, type, ...arr]).buffer);
+        this.ws?.send(new Uint32Array([this.index, type, ...arr]).buffer);
         this.index++;
     }
     public SendClipboard(val: string) {
@@ -54,7 +53,7 @@ export class DataRTC {
             0,
             0
         ]);
-        this.ws.send(this.concatTypedArrays(first, buff).buffer);
+        this.ws?.send(this.concatTypedArrays(first, buff).buffer);
         this.index++;
     }
 
