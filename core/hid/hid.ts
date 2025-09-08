@@ -5,27 +5,20 @@ import { Log, LogLevel } from '../utils/log';
 const MOUSE_SPEED = 1.07;
 
 export class HID {
+    public scancode: boolean;
     private prev_buttons: Map<number, boolean>;
     private prev_sliders: Map<number, number>;
     private prev_axis: Map<number, number>;
 
     private pressing_keys: number[];
-
     private relativeMouse: boolean;
-    public scancode: boolean;
-
-    last_interact: Date;
-    public last_active(): number {
-        return (new Date().getTime() - this.last_interact.getTime()) / 1000;
-    }
-
+    private last_interact: Date;
     private SendFunc: (...data: HIDMsg[]) => Promise<void>;
-    public disable: boolean;
+    private disable: boolean;
     private closed: boolean;
-
     private intervals: any[];
-
     private video: HTMLVideoElement;
+
     constructor(
         Sendfunc: (...data: HIDMsg[]) => Promise<void>,
         video?: HTMLVideoElement
@@ -104,6 +97,9 @@ export class HID {
         document.onkeydown = null;
     }
 
+    public last_active = (): number =>
+        (new Date().getTime() - this.last_interact.getTime()) / 1000;
+
     public async handleIncomingData(blob: Blob) {
         const data = await blob.text();
         const buff = new TextEncoder().encode(data);
@@ -172,9 +168,8 @@ export class HID {
         return gamepads.length == 0 ? 1000 : 30;
     }
 
-    public async ResetKeyStuck() {
-        await this.SendFunc(new HIDMsg(EventCode.kr, {}));
-    }
+    public ResetKeyStuck = () =>
+        this.SendFunc(new HIDMsg(EventCode.kr, {}));
 
     private async keydown(event: KeyboardEvent) {
         this.last_interact = new Date();
