@@ -18,9 +18,11 @@ class Thinkmay {
     private hid: HID;
     private video: VideoWrapper;
     private audio: AudioWrapper;
-    private dataUrl: string;
+    private hidUrl: string;
     private micUrl: string;
 
+    private logConn?: WebSocket;
+    private vmLogCb: LogCb[];
     private videoConn: MediaRTC;
     private audioConn: MediaRTC;
     private microConn: MicrophoneRTC;
@@ -31,13 +33,15 @@ class Thinkmay {
     constructor(
         vid: VideoWrapper,
         audio: AudioWrapper,
-        dataUrl: string,
-        micUrl?: string
+        hidUrl: string,
+        micUrl?: string,
+        logUrl?: string
     ) {
         this.closed = false;
+        this.vmLogCb = [];
         this.video = vid;
         this.audio = audio;
-        this.dataUrl = dataUrl;
+        this.hidUrl = hidUrl;
         this.micUrl = micUrl;
         this.Metrics = structuredClone(initialMetric);
 
@@ -49,6 +53,7 @@ class Thinkmay {
         this.videoEstablishmentLoop();
         this.dataEstablishmentLoop();
         if (this.micUrl) this.microphoneEstablishmentLoop();
+        if (logUrl) this.handleLog(logUrl);
     }
 
     private static Now = () => new Date().getTime();
@@ -59,6 +64,15 @@ class Thinkmay {
         this.missing_frame = setTimeout(this.ResetVideo.bind(this), 1000);
     }
 
+    private handleLog(url: string) {
+        this.logConn = new WebSocket(url);
+        this.logConn.onopen = () => {
+            this.logConn.onmessage = async (ev) => {
+                const txt = await ev.data.text();
+                this.vmLogCb.forEach((fun) => fun(txt));
+            };
+        };
+    }
     private async audioTransform(
         encodedFrame: RTCEncodedAudioFrame,
         controller: TransformStreamDefaultController<RTCEncodedAudioFrame>
@@ -253,7 +267,7 @@ class Thinkmay {
         if (this.closed) return;
 
         this.dataConn = new DataRTC(
-            this.dataUrl,
+            this.hidUrl,
             () => setTimeout(this.dataEstablishmentLoop.bind(this), 1000),
             this.hid.handleIncomingData.bind(this.hid)
         );
@@ -364,6 +378,8 @@ class Thinkmay {
         this.Metrics.video.status = 'close';
     }
 
+    public AddLogCb = (cb: LogCb) => this.vmLogCb.push(cb);
+
     async SendRawHID(...data: HIDMsg[]) {
         if (this.closed) return;
         for (const element of data) {
@@ -375,6 +391,7 @@ class Thinkmay {
 
     public Close() {
         this.closed = true;
+        this.logConn?.close();
         clearTimeout(this.missing_frame);
         clearInterval(this.countThread);
         this.hid?.Close();
@@ -387,15 +404,17 @@ class Thinkmay {
     }
 }
 
+export type LogCb = (log: string) => void;
+
 export {
     AddNotifier,
     AudioWrapper,
     ConnectionEvent,
     EventCode,
-    Thinkmay as RemoteDesktopClient,
+    Thinkmay,
     VideoWrapper,
-    isMobile,
     getBrowser,
     getOS,
+    isMobile,
     useShift
 };

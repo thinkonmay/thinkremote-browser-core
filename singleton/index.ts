@@ -1,9 +1,10 @@
-import { EventCode, RemoteDesktopClient } from '../core';
+import { EventCode, LogCb, Thinkmay } from '../core';
 
 let HQ = false;
 export const MAX_FRAMERATE = 120; //240
 export const MIN_FRAMERATE = 40;
-let CLIENT: RemoteDesktopClient | undefined = undefined;
+let CLIENT: Thinkmay | undefined = undefined;
+const cbs: LogCb[] = [];
 
 export const set_hq = (val: boolean) => (HQ = val);
 export const MAX_BITRATE = () =>
@@ -14,9 +15,15 @@ export const MAX_BITRATE = () =>
 export const MIN_BITRATE = () =>
     Math.round((500 / (1920 * 1080)) * (CLIENT ? CLIENT.Size() : 1920 * 1080));
 
-export const Assign = (client: RemoteDesktopClient) => {
+export const Assign = (client: Thinkmay) => {
     if (CLIENT) CLIENT.Close();
     CLIENT = client;
+    cbs.forEach(CLIENT.AddLogCb);
+};
+
+export const LogCallback = (cb: LogCb) => {
+    CLIENT?.AddLogCb(cb);
+    cbs.push(cb);
 };
 
 export const ready = async (): Promise<Error | void> => {

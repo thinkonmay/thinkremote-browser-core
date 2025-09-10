@@ -1,6 +1,6 @@
 import { ClientResponseError } from 'pocketbase';
 import { v4 as uuidv4 } from 'uuid';
-import { CAUSE, getFrontendURL, GLOBAL, POCKETBASE } from './database';
+import { CAUSE, GLOBAL, POCKETBASE } from './database';
 
 export class APIError {
     code: number;
@@ -158,7 +158,8 @@ type RemoteCredential = {
     audioUrl: string;
     videoUrl: string;
     microUrl?: string;
-    dataUrl: string;
+    logUrl?: string;
+    hidUrl: string;
 };
 
 const GetInfo = () => internalFetch<Computer>('info');
@@ -234,7 +235,7 @@ function ParseRequest(
     const result: RemoteCredential = {
         videoUrl: '',
         audioUrl: '',
-        dataUrl: ''
+        hidUrl: ''
     };
 
     listener.forEach(({ id, content }) => {
@@ -246,7 +247,10 @@ function ParseRequest(
                 result.audioUrl = `wss://${address}:444/broadcasters/webrtc/recvonly?token=${id}${opt}&codec=opus`;
                 break;
             case 'hid':
-                result.dataUrl = `wss://${address}:444/broadcasters/websocket?token=${id}${opt}`;
+                result.hidUrl = `wss://${address}:444/broadcasters/websocket?token=${id}${opt}`;
+                break;
+            case 'log':
+                result.logUrl = `wss://${address}:444/broadcasters/websocket?token=${id}${opt}`;
                 break;
             case 'microphone':
                 result.microUrl = `wss://${address}:444/broadcasters/webrtc/sendonly?token=${id}${opt}`;
@@ -282,13 +286,13 @@ function getRemoteSession(computer: Computer): Session | undefined {
 }
 
 export {
+    CancelDeployment,
     CAUSE,
     ChangeTemplate,
     ClaimSteam,
     ClaimStorage,
     CloseSession,
     CreateSession,
-    getFrontendURL,
     GetInfo,
     getRemoteSession,
     GetVmLog,
@@ -297,7 +301,6 @@ export {
     ParseRequest,
     POCKETBASE,
     StartThinkmay,
-    UnclaimResource,
-    CancelDeployment
+    UnclaimResource
 };
 export type { Computer, RemoteCredential, S3Credential, Session, Steam };
