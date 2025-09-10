@@ -167,7 +167,6 @@ const ClaimStorage = () => internalFetch<string>('storage');
 const ClaimSteam = () => internalFetch<string>('steam');
 const UnclaimResource = () => internalFetch<void>('resource');
 const CloseSession = (req: Session) => internalFetch<Computer>('close', req);
-const GetVmLog = (session: string) => internalFetch<string>('log', session);
 const CreateSession = async (session: Session) =>
     internalFetch<Computer>('new', session);
 const ChangeTemplate = async (template: string, volume_id: string) =>
@@ -295,7 +294,6 @@ export {
     CreateSession,
     GetInfo,
     getRemoteSession,
-    GetVmLog,
     getVmSession,
     GLOBAL,
     ParseRequest,
