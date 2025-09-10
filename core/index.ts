@@ -5,7 +5,6 @@ import { Metric, initialMetric } from './models/metrics.model';
 import { AudioWrapper } from './sink/audio/wrapper';
 import { VideoWrapper } from './sink/video/wrapper';
 import { convertJSKey, useShift } from './utils/convert';
-import { AddNotifier, ConnectionEvent, Log, LogLevel } from './utils/log';
 import { getBrowser, getOS, isMobile } from './utils/platform';
 import { DataRTC } from './webrtc/data';
 import { MediaRTC, MessageType, RTCMetric } from './webrtc/media';
@@ -13,6 +12,8 @@ import { MicrophoneRTC } from './webrtc/microphone';
 
 class Thinkmay {
     public Metrics: Metric;
+    public static NowInSec = () => new Date().getTime() / 1000;
+    public static SinceSec = (time: number) => this.NowInSec() - time;
 
     private touch: TouchHandler;
     private hid: HID;
@@ -48,7 +49,6 @@ class Thinkmay {
         this.hid = new HID(this.send.bind(this), vid.internal());
         this.touch = new TouchHandler(vid.internal(), this.send.bind(this));
 
-        Log(LogLevel.Infor, `Started remote desktop connection`);
         this.audioEstablishmentLoop();
         this.videoEstablishmentLoop();
         this.dataEstablishmentLoop();
@@ -56,7 +56,6 @@ class Thinkmay {
         if (logUrl) this.handleLog(logUrl);
     }
 
-    private static Now = () => new Date().getTime();
     private missing_frame: any;
     private countThread: any;
     private waitForNewFrame() {
@@ -108,7 +107,6 @@ class Thinkmay {
                     .pipeTo(frameStreams.writable);
             } catch {}
 
-        Log(LogLevel.Warning, `Incoming ${evt.track.kind} stream ${stream.id}`);
         await this.video.assign(stream);
         await this.video.play();
     }
@@ -134,7 +132,6 @@ class Thinkmay {
                     .pipeTo(frameStreams.writable);
             } catch {}
 
-        Log(LogLevel.Infor, `Incoming ${evt.track.kind} stream`);
         await this.audio.assign(stream);
         await this.audio.play();
     }
@@ -209,12 +206,11 @@ class Thinkmay {
             () => setTimeout(this.audioEstablishmentLoop.bind(this), 1000)
         );
 
-        const start = Thinkmay.Now();
+        const start = Thinkmay.NowInSec();
         this.Metrics.audio = structuredClone(initialMetric.audio);
         this.Metrics.audio.status = 'connecting';
         while (!this.audioConn.connected) {
-            if (Thinkmay.Now() - start > 30 * 1000)
-                return this.audioConn.Close();
+            if (Thinkmay.SinceSec(start) > 30) return this.audioConn.Close();
             else if (this.audioConn.closed) return;
             else await new Promise((r) => setTimeout(r, 1000));
         }
@@ -235,19 +231,17 @@ class Thinkmay {
         this.Metrics.video = structuredClone(initialMetric.video);
         this.Metrics.video.status = 'connecting';
 
-        let start = Thinkmay.Now();
+        let start = Thinkmay.NowInSec();
         while (!this.videoConn.connected) {
-            if (Thinkmay.Now() - start > 30 * 1000)
-                return this.videoConn.Close();
+            if (Thinkmay.SinceSec(start) > 30) return this.videoConn.Close();
             else if (this.videoConn.closed) return;
             else await new Promise((r) => setTimeout(r, 100));
         }
 
-        start = Thinkmay.Now();
+        start = Thinkmay.NowInSec();
         await this.ResetVideo();
         while (this.Metrics.video.frame.totalframes == 0) {
-            if (Thinkmay.Now() - start > 5 * 1000)
-                return this.videoConn.Close();
+            if (Thinkmay.SinceSec(start) > 5) return this.videoConn.Close();
             else if (this.videoConn.closed) return;
             else await new Promise((r) => setTimeout(r, 300));
         }
@@ -345,14 +339,12 @@ class Thinkmay {
         else if (!this.videoConn.connected)
             setTimeout(() => this.ChangeFramerate(framerate), 1000);
         this.videoConn.Send(MessageType.Framerate, framerate);
-        Log(LogLevel.Infor, `changing framerate to ${framerate}`);
     }
     public async ChangeBitrate(bitrate: number) {
         if (this.closed) return;
         else if (!this.videoConn.connected)
             setTimeout(() => this.ChangeBitrate(bitrate), 1000);
         this.videoConn.Send(MessageType.Bitrate, Math.round(bitrate / 1000));
-        Log(LogLevel.Infor, `changing bitrate to ${bitrate}`);
     }
 
     public async PointerVisible(enable: boolean) {
@@ -400,16 +392,13 @@ class Thinkmay {
         this.audioConn?.Close();
         this.video.internal().srcObject = null;
         this.audio.internal().srcObject = null;
-        Log(LogLevel.Infor, `Closed remote desktop connection`);
     }
 }
 
 export type LogCb = (log: string) => void;
 
 export {
-    AddNotifier,
     AudioWrapper,
-    ConnectionEvent,
     EventCode,
     Thinkmay,
     VideoWrapper,

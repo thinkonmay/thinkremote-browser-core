@@ -1,3 +1,4 @@
+import { Thinkmay } from '..';
 import { TouchData } from '../models/hid.model';
 import { EventCode, HIDMsg } from '../models/keys.model';
 
@@ -12,10 +13,8 @@ enum Event {
 export class TouchHandler {
     private onGoingTouchs: Map<number, TouchData>;
 
-    private last_interact: Date;
-    public last_active(): number {
-        return (new Date().getTime() - this.last_interact.getTime()) / 1000;
-    }
+    private last_interact: number;
+    public last_active = () => Thinkmay.SinceSec(this.last_interact);
 
     private running: any;
     private SendFunc: (...data: HIDMsg[]) => Promise<void>;
@@ -28,7 +27,7 @@ export class TouchHandler {
         this.SendFunc = Sendfunc;
 
         this.video = video;
-        this.last_interact = new Date();
+        this.last_interact = Thinkmay.NowInSec();
 
         this.video.ontouchend = this.handleEnd.bind(this);
         this.video.ontouchstart = this.handleStart.bind(this);
@@ -71,7 +70,7 @@ export class TouchHandler {
 
     private handleStart = (evt: TouchEvent) => {
         evt.preventDefault();
-        this.last_interact = new Date();
+        this.last_interact = Thinkmay.NowInSec();
 
         const touches = evt.changedTouches;
         for (let i = 0; i < touches.length; i++)

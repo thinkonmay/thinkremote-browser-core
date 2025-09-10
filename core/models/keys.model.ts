@@ -1,5 +1,3 @@
-import { Log, LogLevel } from '../utils/log';
-
 export enum EventCode {
     mma = 1,
     mmr,

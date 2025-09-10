@@ -27,11 +27,11 @@ export const LogCallback = (cb: LogCb) => {
 };
 
 export const ready = async (): Promise<Error | void> => {
-    const now = () => new Date().getTime() / 1000;
-    const start = now();
+    const start = Thinkmay.NowInSec();
     while (NotReady()) {
         await new Promise((r) => setTimeout(r, 1000));
-        if (now() - start > 10 * 60) return new Error('connect timeout');
+        if (Thinkmay.SinceSec(start) > 10 * 60)
+            return new Error('connect timeout');
         else if (CLIENT.AuthFailed())
             return new Error('streaming auth failure');
     }

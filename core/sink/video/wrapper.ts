@@ -1,5 +1,3 @@
-import { Log, LogLevel } from '../../utils/log';
-
 export class VideoWrapper {
     private video: HTMLVideoElement;
     public url: string;
@@ -12,7 +10,7 @@ export class VideoWrapper {
     // Play video function
     async play() {
         this.video.play().catch((e) => {
-            Log(LogLevel.Error, `error playing video ${e.message}`);
+            console.log(`error playing video ${e.message}`);
             setTimeout(() => this.play(), 1000);
         });
     }

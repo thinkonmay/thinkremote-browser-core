@@ -9,11 +9,6 @@ export type Browser =
     | 'Edge'
     | 'unknown';
 
-export function getPlatform(): Platform {
-    let os = getOS();
-    return os == 'Android' || os == 'iOS' ? 'mobile' : 'desktop';
-}
-
 export function getOS(): OS {
     let OSName: OS = 'unknown';
 
@@ -49,20 +44,6 @@ export function getBrowser(): Browser {
     }
 
     return 'unknown';
-}
-
-export function getResolution(): {
-    width: number;
-    height: number;
-    screen_width: number;
-    screen_height: number;
-} {
-    return {
-        width: document.documentElement.scrollWidth,
-        height: document.documentElement.scrollHeight,
-        screen_width: window.screen.width,
-        screen_height: window.screen.height
-    };
 }
 
 export const isMobile = () => {

@@ -1,7 +1,6 @@
+import { Thinkmay } from '..';
 import { EventCode, HIDMsg } from '../models/keys.model';
 import { convertJSKey } from '../utils/convert';
-import { Log, LogLevel } from '../utils/log';
-
 const MOUSE_SPEED = 1.07;
 
 export class HID {
@@ -12,7 +11,7 @@ export class HID {
 
     private pressing_keys: number[];
     private relativeMouse: boolean;
-    private last_interact: Date;
+    private last_interact: number;
     private SendFunc: (...data: HIDMsg[]) => Promise<void>;
     private disable: boolean;
     private closed: boolean;
@@ -41,7 +40,7 @@ export class HID {
         this.prev_axis = new Map<number, number>();
 
         this.scancode = false;
-        this.last_interact = new Date();
+        this.last_interact = Thinkmay.NowInSec();
 
         this.intervals = [];
         this.pressing_keys = [];
@@ -105,8 +104,7 @@ export class HID {
         document.removeEventListener('keyup', this.onkeyup);
     }
 
-    public last_active = (): number =>
-        (new Date().getTime() - this.last_interact.getTime()) / 1000;
+    public last_active = () => Thinkmay.SinceSec(this.last_interact);
 
     public async handleIncomingData(blob: Blob) {
         const data = await blob.text();
@@ -132,7 +130,7 @@ export class HID {
                 });
                 break;
             case EventCode.noti:
-                Log(LogLevel.Warning, data.slice(1));
+                console.log(data.slice(1));
                 break;
             case EventCode.ping:
                 break;
@@ -187,7 +185,7 @@ export class HID {
         if (this.scancode) code += 2;
         await this.SendFunc(new HIDMsg(code, { key }));
         this.pressing_keys.push(key);
-        this.last_interact = new Date();
+        this.last_interact = Thinkmay.NowInSec();
     }
     private async keyup(event: KeyboardEvent) {
         event.preventDefault();
@@ -232,7 +230,7 @@ export class HID {
                 })
             );
         }
-        this.last_interact = new Date();
+        this.last_interact = Thinkmay.NowInSec();
     }
 
     public async MouseButtonDown(event: { button: number }) {

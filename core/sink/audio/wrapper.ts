@@ -1,5 +1,3 @@
-import { Log, LogLevel } from '../../utils/log';
-
 export class AudioWrapper {
     private audio: HTMLAudioElement;
     public url: string;
@@ -12,7 +10,7 @@ export class AudioWrapper {
     // Play audio function
     async play() {
         this.audio.play().catch((e) => {
-            Log(LogLevel.Error, `error playing audio ${e.message}`);
+            console.log(`error playing audio ${e.message}`);
             setTimeout(() => this.play(), 1000);
         });
     }
