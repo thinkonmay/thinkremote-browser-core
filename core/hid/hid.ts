@@ -17,6 +17,7 @@ export class HID {
     private closed: boolean;
     private intervals: any[];
     private video: HTMLVideoElement;
+    private pressing: any[];
 
     private onwheel = this.mouseWheel.bind(this);
     private onmousemove = this.mouseButtonMovement.bind(this);
@@ -24,6 +25,13 @@ export class HID {
     private onkeyup = this.keyup.bind(this);
     private onmousedown = this.MouseButtonDown.bind(this);
     private onmouseup = this.MouseButtonUp.bind(this);
+    private onmouseup2 = ({ button }) =>
+        (this.pressing = this.pressing.filter((x) => x != button));
+    private onmousedown2 = ({ button }) => this.pressing.push(button);
+    private onmousemove2 = (ev) => {
+        if (ev.target != this.video)
+            this.pressing.forEach((val) => this.MouseButtonUp({ button: val }));
+    };
 
     constructor(
         Sendfunc: (...data: HIDMsg[]) => Promise<void>,
@@ -42,6 +50,7 @@ export class HID {
         this.scancode = false;
         this.last_interact = Thinkmay.NowInSec();
 
+        this.pressing = [];
         this.intervals = [];
         this.pressing_keys = [];
 
@@ -52,12 +61,15 @@ export class HID {
          */
         this.video.addEventListener('mousedown', this.onmousedown);
         this.video.addEventListener('mouseup', this.onmouseup);
+        this.video.addEventListener('mousedown', this.onmousedown2);
+        this.video.addEventListener('mouseup', this.onmouseup2);
 
         /**
          * document event
          */
         document.addEventListener('wheel', this.onwheel);
         document.addEventListener('mousemove', this.onmousemove);
+        document.addEventListener('mousemove', this.onmousemove2);
         document.addEventListener('keydown', this.onkeydown);
         document.addEventListener('keyup', this.onkeyup);
 
@@ -98,6 +110,9 @@ export class HID {
         this.closed = true;
         this.video.removeEventListener('mousedown', this.onmousedown);
         this.video.removeEventListener('mouseup', this.onmouseup);
+        this.video.removeEventListener('mousedown', this.onmousedown2);
+        this.video.removeEventListener('mouseup', this.onmouseup2);
+        document.removeEventListener('mousemove', this.onmousemove2);
         document.removeEventListener('wheel', this.onwheel);
         document.removeEventListener('mousemove', this.onmousemove);
         document.removeEventListener('keydown', this.onkeydown);
@@ -233,29 +248,29 @@ export class HID {
         this.last_interact = Thinkmay.NowInSec();
     }
 
-    public async MouseButtonDown(event: { button: number }) {
-        const code = EventCode.md;
-        await this.SendFunc(
-            new HIDMsg(code, {
-                button: event.button
+    public async MouseButtonDown({ button }: { button: number }) {
+        return this.SendFunc(
+            new HIDMsg(EventCode.md, {
+                button: button
             })
         );
     }
-    public async MouseButtonUp(event: { button: number }) {
-        const code = EventCode.mu;
-        await this.SendFunc(
-            new HIDMsg(code, {
-                button: event.button
+    public async MouseButtonUp({ button }: { button: number }) {
+        return this.SendFunc(
+            new HIDMsg(EventCode.mu, {
+                button: button
             })
         );
     }
 
     private clientToServerY(clientY: number): number {
-        return clientY / document.documentElement.clientHeight;
+        const value = clientY / document.documentElement.clientHeight;
+        return value > 0 ? (value < 1 ? value : 0.999) : 0.001;
     }
 
     private clientToServerX(clientX: number): number {
-        return clientX / document.documentElement.clientWidth;
+        const value = clientX / document.documentElement.clientWidth;
+        return value > 0 ? (value < 1 ? value : 0.999) : 0.001;
     }
 
     private disableKeyWhileFullscreen() {
