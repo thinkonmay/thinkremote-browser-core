@@ -48,8 +48,8 @@ class Thinkmay {
         this.micUrl = micUrl;
         this.Metrics = structuredClone(initialMetric);
 
-        this.hid = new HID(this.send.bind(this), vid.internal(), this.gid);
-        this.touch = new TouchHandler(vid.internal(), this.send.bind(this));
+        this.hid = new HID(this.SendRawHID.bind(this), vid.internal(), this.gid);
+        this.touch = new TouchHandler(vid.internal(), this.SendRawHID.bind(this));
 
         this.audioEstablishmentLoop();
         this.videoEstablishmentLoop();
@@ -137,8 +137,6 @@ class Thinkmay {
         await this.audio.assign(stream);
         await this.audio.play();
     }
-
-    private send = (...val: HIDMsg[]) => this.SendRawHID(...val);
 
     private handle_metrics = (val: RTCMetric) => {
         const now = new Date();
@@ -373,16 +371,21 @@ class Thinkmay {
 
     public AddLogCb = (cb: LogCb) => this.vmLogCb.push(cb);
 
-    async SendRawHID(...data: HIDMsg[]) {
+    SendRawHID(...data: HIDMsg[]) {
         if (this.closed) return;
-        while (data.length > 0) {
-            const element = data.shift();
-            await this.dataConn?.Send(
-                element.convertType(),
-                ...element.buffer()
-            );
-            if (data.length > 0) await new Promise((r) => setTimeout(r, 5));
-        }
+        const first = data.shift();
+        data.forEach((follow, index) =>
+            setTimeout(
+                () =>
+                    this.dataConn?.Send(
+                        follow.convertType(),
+                        ...follow.buffer()
+                    ),
+                (index + 1) * 5
+            )
+        );
+
+        return this.dataConn?.Send(first.convertType(), ...first.buffer());
     }
 
     public Close() {
