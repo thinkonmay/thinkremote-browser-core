@@ -2,7 +2,6 @@ import { EventCode } from '..';
 
 export class DataRTC {
     private closed: boolean;
-    private index: number = 0;
     private closeHandler: () => void;
     private ws: WebSocket;
     private lastSent: number;
@@ -32,38 +31,32 @@ export class DataRTC {
         close();
     }
 
-    private internalSend = async (buff: ArrayBuffer) => {
-        while (new Date().getTime() - this.lastSent < 5)
-            await new Promise((r) => setTimeout(r, 1));
+    private internalSend = async (buff: ArrayBuffer, skip: boolean) => {
+        if (!skip)
+            while (new Date().getTime() - this.lastSent < 5)
+                await new Promise((r) => setTimeout(r, 1));
 
         this.ws?.send(buff);
         this.lastSent = new Date().getTime();
-        this.index++;
     };
 
     public Send(type: EventCode, ...arr: number[]) {
         if (this.closed) return;
-        const data = new Uint32Array([this.index, type, ...arr]).buffer;
-        return this.internalSend(data);
+        const data = new Uint32Array([type, ...arr]).buffer;
+        return this.internalSend(
+            data,
+            [EventCode.ga, EventCode.gs].includes(type)
+        );
     }
     public SendClipboard(val: string) {
         if (this.closed) return;
-        const first = new Uint8Array([
-            this.index,
-            0,
-            0,
-            0,
-            EventCode.cs,
-            0,
-            0,
-            0
-        ]);
+        const first = new Uint8Array([EventCode.cs, 0, 0, 0]);
         const data = this.concatTypedArrays(
             first,
-            new TextEncoder().encode(btoa(val))
+            new TextEncoder().encode(val)
         );
 
-        return this.internalSend(data);
+        return this.internalSend(data, false);
     }
 
     private concatTypedArrays(a: Uint8Array, b: Uint8Array): ArrayBuffer {

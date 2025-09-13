@@ -10,6 +10,8 @@ import { DataRTC } from './webrtc/data';
 import { MediaRTC, MessageType, RTCMetric } from './webrtc/media';
 import { MicrophoneRTC } from './webrtc/microphone';
 
+const ssgid = 0;
+
 class Thinkmay {
     public Metrics: Metric;
     public static NowInSec = () => new Date().getTime() / 1000;
@@ -29,7 +31,7 @@ class Thinkmay {
     private microConn: MicrophoneRTC;
     private dataConn: DataRTC;
     private closed: boolean;
-    private gid = 0;
+    private gid = ssgid;
 
     constructor(
         vid: VideoWrapper,
@@ -46,7 +48,7 @@ class Thinkmay {
         this.micUrl = micUrl;
         this.Metrics = structuredClone(initialMetric);
 
-        this.hid = new HID(this.send.bind(this), vid.internal());
+        this.hid = new HID(this.send.bind(this), vid.internal(), this.gid);
         this.touch = new TouchHandler(vid.internal(), this.send.bind(this));
 
         this.audioEstablishmentLoop();
@@ -373,11 +375,14 @@ class Thinkmay {
 
     async SendRawHID(...data: HIDMsg[]) {
         if (this.closed) return;
-        for (const element of data)
+        while (data.length > 0) {
+            const element = data.shift();
             await this.dataConn?.Send(
                 element.convertType(),
                 ...element.buffer()
             );
+            if (data.length > 0) await new Promise((r) => setTimeout(r, 5));
+        }
     }
 
     public Close() {

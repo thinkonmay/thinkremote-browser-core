@@ -18,6 +18,7 @@ export class HID {
     private intervals: any[];
     private video: HTMLVideoElement;
     private pressing: any[];
+    private gid: number;
 
     private onwheel = this.mouseWheel.bind(this);
     private onmousemove = this.mouseButtonMovement.bind(this);
@@ -35,13 +36,15 @@ export class HID {
 
     constructor(
         Sendfunc: (...data: HIDMsg[]) => Promise<void>,
-        video?: HTMLVideoElement
+        video: HTMLVideoElement,
+        gid: number
     ) {
         this.disable = false;
         this.closed = false;
         this.SendFunc = async (...data: HIDMsg[]) =>
             !this.disable ? await Sendfunc(...data) : null;
         this.video = video;
+        this.gid = gid;
 
         this.prev_buttons = new Map<number, boolean>();
         this.prev_sliders = new Map<number, number>();
@@ -145,7 +148,18 @@ export class HID {
                 });
                 break;
             case EventCode.noti:
-                console.log(data.slice(1));
+                const str = data.slice(1);
+                const ctrlNotFound = 'controller not found ';
+                if (str.includes(ctrlNotFound))
+                    this.SendFunc(
+                        new HIDMsg(EventCode.gconn, {
+                            gid: Number.parseInt(
+                                str.replaceAll(ctrlNotFound, '')
+                            )
+                        })
+                    );
+
+                console.log(str);
                 break;
             case EventCode.ping:
                 break;
@@ -156,13 +170,15 @@ export class HID {
         const gamepads = navigator.getGamepads().filter((x) => x != null);
         const msg: HIDMsg[] = [];
         for (let gamepad_id = 0; gamepad_id < gamepads.length; gamepad_id++) {
-            const { buttons, axes } = gamepads[gamepad_id];
+            const { buttons, axes, index } = gamepads[gamepad_id];
+            const gid = this.gid + 1 + index;
 
             for (let index = 0; index < buttons.length; index++) {
                 const { pressed, value } = buttons[index];
                 if (index == 6 || index == 7)
                     msg.push(
                         new HIDMsg(EventCode.gs, {
+                            gid: gid,
                             index: index,
                             val: value
                         })
@@ -170,6 +186,7 @@ export class HID {
                 else
                     msg.push(
                         new HIDMsg(EventCode.gb, {
+                            gid: gid,
                             index: index,
                             val: pressed ? 1 : 0
                         })
@@ -179,6 +196,7 @@ export class HID {
             for (let index = 0; index < axes.length; index++)
                 msg.push(
                     new HIDMsg(EventCode.ga, {
+                        gid: gid,
                         index: index,
                         val: axes[index]
                     })
