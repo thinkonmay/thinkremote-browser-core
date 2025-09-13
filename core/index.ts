@@ -273,8 +273,7 @@ class Thinkmay {
     public Size = () =>
         this.video.internal().videoHeight * this.video.internal().videoWidth;
 
-    public SetClipboard = (val: string) =>
-        this.SendRawHID(new HIDMsg(EventCode.cs, { val }));
+    public SetClipboard = (val: string) => this.dataConn?.SendClipboard(val);
 
     public MouseButtonDown = (event: { button: number }) =>
         this.SendRawHID(
@@ -374,11 +373,11 @@ class Thinkmay {
 
     async SendRawHID(...data: HIDMsg[]) {
         if (this.closed) return;
-        for (const element of data) {
-            if (element.convertType() == EventCode.cs)
-                this.dataConn.SendClipboard(element.data.val);
-            else this.dataConn.Send(element.convertType(), ...element.buffer());
-        }
+        for (const element of data)
+            await this.dataConn?.Send(
+                element.convertType(),
+                ...element.buffer()
+            );
     }
 
     public Close() {
