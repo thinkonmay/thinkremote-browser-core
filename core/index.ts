@@ -48,8 +48,15 @@ class Thinkmay {
         this.micUrl = micUrl;
         this.Metrics = structuredClone(initialMetric);
 
-        this.hid = new HID(this.SendRawHID.bind(this), vid.internal(), this.gid);
-        this.touch = new TouchHandler(vid.internal(), this.SendRawHID.bind(this));
+        this.hid = new HID(
+            this.SendRawHID.bind(this),
+            vid.internal(),
+            this.gid
+        );
+        this.touch = new TouchHandler(
+            vid.internal(),
+            this.SendRawHID.bind(this)
+        );
 
         this.audioEstablishmentLoop();
         this.videoEstablishmentLoop();

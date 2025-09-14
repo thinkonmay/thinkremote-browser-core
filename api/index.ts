@@ -74,7 +74,7 @@ type Volume = {
     size?: number;
     name: string;
     inuse?: boolean;
-    pool: 'user_data' | 'app_data' | string;
+    pool: 'user_data' | 'app_data' | 'unified_data' | string;
 };
 
 type Computer = {
