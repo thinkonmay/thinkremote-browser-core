@@ -1,3 +1,5 @@
+import { Session } from '#/api';
+import { v4 } from 'uuid';
 import { HID } from './hid/hid';
 import { TouchHandler } from './hid/touch';
 import { EventCode, HIDMsg } from './models/keys.model';
@@ -393,6 +395,12 @@ class Thinkmay {
         );
 
         return this.dataConn?.Send(first.convertType(), ...first.buffer());
+    }
+
+    public BackupGame() {
+        const text = JSON.stringify({ id: v4(), backup: {} } as Session);
+        console.log(text);
+        this.logConn?.send(new TextEncoder().encode(text));
     }
 
     public Close() {

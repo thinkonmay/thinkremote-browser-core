@@ -82,3 +82,4 @@ export const ChangeFramerate = (b: number) => CLIENT?.ChangeFramerate(b);
 export const SetClipboard = (val: string) => CLIENT?.SetClipboard(val);
 export const SetScancode = (val: boolean) => CLIENT?.SetScancode(val);
 export const PointerVisible = (val: boolean) => CLIENT?.PointerVisible(val);
+export const BackupVM = () => CLIENT?.BackupGame();
