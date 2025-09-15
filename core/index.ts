@@ -397,9 +397,12 @@ class Thinkmay {
         return this.dataConn?.Send(first.convertType(), ...first.buffer());
     }
 
-    public BackupGame() {
+    public Restore() {
         const text = JSON.stringify({ id: v4(), backup: {} } as Session);
-        console.log(text);
+        this.logConn?.send(new TextEncoder().encode(text));
+    }
+    public Backup(id: string) {
+        const text = JSON.stringify({ id } as Session);
         this.logConn?.send(new TextEncoder().encode(text));
     }
 
