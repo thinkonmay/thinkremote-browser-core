@@ -167,8 +167,10 @@ export class HID {
     }
 
     private async runGamepad() {
+        const threeshold = 0.25;
         const buttonMap = {};
-        let resetPos = false;
+        let resetRPos = false;
+        let resetLPos = false;
 
         while (!this.closed) {
             const gamepads = navigator.getGamepads().filter((x) => x != null);
@@ -212,38 +214,73 @@ export class HID {
                     }
                     buttonMap[gid] = buttons;
 
-                    if (
-                        axes.every((val) => Math.abs(val) < 0.01) &&
-                        !resetPos
-                    ) {
-                        resetPos = true;
-                        for (let index = 0; index < axes.length; index++)
-                            msg.push(
-                                new HIDMsg(EventCode.ga, {
-                                    gid: gid,
-                                    index: index,
-                                    val: 0
-                                })
-                            );
-                    } else if (
-                        axes.find((val) => Math.abs(val) > 0.01) != undefined
-                    ) {
-                        resetPos = false;
-                        for (let index = 0; index < axes.length; index++)
-                            msg.push(
-                                new HIDMsg(EventCode.ga, {
-                                    gid: gid,
-                                    index: index,
-                                    val: axes[index]
-                                })
-                            );
+                    {
+                        const axesL = [axes[0], axes[1]];
+                        if (
+                            !resetLPos &&
+                            axesL.every((val) => Math.abs(val) < threeshold)
+                        ) {
+                            resetLPos = true;
+                            for (let index = 0; index < axesL.length; index++)
+                                msg.push(
+                                    new HIDMsg(EventCode.ga, {
+                                        gid: gid,
+                                        index: index,
+                                        val: 0
+                                    })
+                                );
+                        } else if (
+                            axesL.find((val) => Math.abs(val) > threeshold) !=
+                            undefined
+                        ) {
+                            resetLPos = false;
+                            for (let index = 0; index < axesL.length; index++)
+                                msg.push(
+                                    new HIDMsg(EventCode.ga, {
+                                        gid: gid,
+                                        index: index,
+                                        val: axes[index]
+                                    })
+                                );
+                        }
+                    }
+
+                    {
+                        const axesR = [axes[2], axes[3]];
+                        if (
+                            !resetRPos &&
+                            axesR.every((val) => Math.abs(val) < threeshold)
+                        ) {
+                            resetRPos = true;
+                            for (let index = 0; index < axesR.length; index++)
+                                msg.push(
+                                    new HIDMsg(EventCode.ga, {
+                                        gid: gid,
+                                        index: index + 2,
+                                        val: 0
+                                    })
+                                );
+                        } else if (
+                            axesR.find((val) => Math.abs(val) > threeshold) !=
+                            undefined
+                        ) {
+                            resetRPos = false;
+                            for (let index = 0; index < axesR.length; index++)
+                                msg.push(
+                                    new HIDMsg(EventCode.ga, {
+                                        gid: gid,
+                                        index: index + 2,
+                                        val: axesR[index]
+                                    })
+                                );
+                        }
                     }
                 }
 
                 if (msg.length > 0) await this.SendFunc(...msg);
             } catch {}
             await new Promise((r) =>
-                setTimeout(r, gamepads.length > 0 ? 35 : 1000)
+                setTimeout(r, gamepads.length > 0 ? 20 : 1000)
             );
         }
     }
