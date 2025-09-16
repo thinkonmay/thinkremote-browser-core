@@ -175,7 +175,7 @@ export class HID {
                     for (let index = 0; index < buttons.length; index++) {
                         const { pressed, value } = buttons[index];
                         const { pressed: last_pressed, value: last_value } =
-                            buttonMap[gid][index] ?? {
+                            buttonMap[gid]?.[index] ?? {
                                 pressed: false,
                                 value: 0
                             };
