@@ -2,8 +2,6 @@ import { Thinkmay } from '..';
 import { TouchData } from '../models/hid.model';
 import { EventCode, HIDMsg } from '../models/keys.model';
 
-const RADIUS = 50;
-const BOTTOM_THRESHOLD_PERCENT = 100;
 const MOUSE_SPEED = 3.5;
 
 enum Event {
@@ -108,8 +106,10 @@ export class TouchHandler {
         }
     };
 
+    private lasttouchmove = new Date().getTime();
     private handleMove = async (evt: TouchEvent) => {
         evt.preventDefault();
+        if (new Date().getTime() - this.lasttouchmove < 15) return;
         const touches = evt.touches;
 
         for (let i = 0; i < touches.length; i++) {
@@ -130,6 +130,7 @@ export class TouchHandler {
 
             prev_touch.copyFromTouch(curr_touch);
         }
+        this.lasttouchmove = new Date().getTime();
     };
 
     private isTouchRight(touch: Touch): boolean {

@@ -29,9 +29,13 @@ export class HID {
     private onmouseup2 = ({ button }) =>
         (this.pressing = this.pressing.filter((x) => x != button));
     private onmousedown2 = ({ button }) => this.pressing.push(button);
+
+    private lastmousemove2 = new Date().getTime();
     private onmousemove2 = (ev) => {
-        if (ev.target != this.video)
+        if (new Date().getTime() - this.lastmousemove2 < 500) return;
+        else if (ev.target != this.video)
             this.pressing.forEach((val) => this.MouseButtonUp({ button: val }));
+        this.lastmousemove2 = new Date().getTime();
     };
 
     constructor(
@@ -161,9 +165,9 @@ export class HID {
         const buttonMap = {};
 
         while (!this.closed) {
-            const msg: HIDMsg[] = [];
             const gamepads = navigator.getGamepads().filter((x) => x != null);
             try {
+                const msg: HIDMsg[] = [];
                 for (
                     let gamepad_id = 0;
                     gamepad_id < gamepads.length;
@@ -212,9 +216,11 @@ export class HID {
                         );
                 }
 
-                await this.SendFunc(...msg);
+                if (msg.length > 0) await this.SendFunc(...msg);
             } catch {}
-            await new Promise((r) => setTimeout(r, gamepads.length > 0 ? 35 : 1000));
+            await new Promise((r) =>
+                setTimeout(r, gamepads.length > 0 ? 35 : 1000)
+            );
         }
     }
 
@@ -258,8 +264,11 @@ export class HID {
             })
         );
     }
+
+    private lastmousemove = new Date().getTime();
     private async mouseButtonMovement(event: MouseEvent) {
-        if (!this.relativeMouse) {
+        if (new Date().getTime() - this.lastmousemove < 15) return;
+        else if (!this.relativeMouse) {
             await this.SendFunc(
                 new HIDMsg(EventCode.mma, {
                     dX: this.clientToServerX(event.clientX),
@@ -275,6 +284,7 @@ export class HID {
             );
         }
         this.last_interact = Thinkmay.NowInSec();
+        this.lastmousemove = new Date().getTime();
     }
 
     public async MouseButtonDown({ button }: { button: number }) {

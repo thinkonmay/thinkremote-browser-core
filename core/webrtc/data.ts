@@ -31,11 +31,7 @@ export class DataRTC {
         close();
     }
 
-    private internalSend = async (buff: ArrayBuffer, skip: boolean) => {
-        if (!skip)
-            while (new Date().getTime() - this.lastSent < 5)
-                await new Promise((r) => setTimeout(r, 1));
-
+    private internalSend = async (buff: ArrayBuffer) => {
         this.ws?.send(buff);
         this.lastSent = new Date().getTime();
     };
@@ -43,10 +39,7 @@ export class DataRTC {
     public Send(type: EventCode, ...arr: number[]) {
         if (this.closed) return;
         const data = new Uint32Array([type, ...arr]).buffer;
-        return this.internalSend(
-            data,
-            [EventCode.ga, EventCode.gs].includes(type)
-        );
+        return this.internalSend(data);
     }
     public SendClipboard(val: string) {
         if (this.closed) return;
@@ -56,7 +49,7 @@ export class DataRTC {
             new TextEncoder().encode(val)
         );
 
-        return this.internalSend(data, false);
+        return this.internalSend(data);
     }
 
     private concatTypedArrays(a: Uint8Array, b: Uint8Array): ArrayBuffer {

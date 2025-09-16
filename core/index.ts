@@ -346,20 +346,24 @@ class Thinkmay {
         if (this.closed) return;
         else if (!this.videoConn.connected)
             setTimeout(() => this.ChangeFramerate(framerate), 1000);
-        this.videoConn.Send(MessageType.Framerate, framerate);
+        else this.videoConn.Send(MessageType.Framerate, framerate);
     }
     public async ChangeBitrate(bitrate: number) {
         if (this.closed) return;
         else if (!this.videoConn.connected)
             setTimeout(() => this.ChangeBitrate(bitrate), 1000);
-        this.videoConn.Send(MessageType.Bitrate, Math.round(bitrate / 1000));
+        else
+            this.videoConn.Send(
+                MessageType.Bitrate,
+                Math.round(bitrate / 1000)
+            );
     }
 
     public async PointerVisible(enable: boolean) {
         if (this.closed) return;
         else if (!this.videoConn.connected)
             setTimeout(() => this.PointerVisible(enable), 1000);
-        this.videoConn.Send(MessageType.Pointer, enable ? 1 : 0);
+        else this.videoConn.Send(MessageType.Pointer, enable ? 1 : 0);
     }
 
     public async ResetVideo() {
