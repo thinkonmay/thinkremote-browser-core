@@ -214,7 +214,7 @@ export class HID {
 
                 await this.SendFunc(...msg);
             } catch {}
-            await new Promise((r) => setTimeout(r, 20));
+            await new Promise((r) => setTimeout(r, 35));
         }
     }
 
