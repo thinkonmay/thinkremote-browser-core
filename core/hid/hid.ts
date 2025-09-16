@@ -174,7 +174,7 @@ export class HID {
                     gamepad_id++
                 ) {
                     const { buttons, axes, index } = gamepads[gamepad_id];
-                    const gid = this.gid + 1 + index;
+                    const gid = this.gid;
 
                     for (let index = 0; index < buttons.length; index++) {
                         const { pressed, value } = buttons[index];
