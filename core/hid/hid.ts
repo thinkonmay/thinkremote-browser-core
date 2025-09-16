@@ -87,12 +87,10 @@ export class HID {
 
         (async () => {
             while (!this.closed) {
-                let wait_period = 10;
                 try {
-                    wait_period = await this.runGamepad();
-                } catch {}
-                if (wait_period > 0)
+                    const wait_period = await this.runGamepad();
                     await new Promise((r) => setTimeout(r, wait_period));
+                } catch {}
             }
         })();
         this.intervals.push(
@@ -204,7 +202,7 @@ export class HID {
         }
 
         await this.SendFunc(...msg);
-        return gamepads.length == 0 ? 1000 : 30;
+        return 50;
     }
 
     public ResetKeyStuck = () => this.SendFunc(new HIDMsg(EventCode.kr, {}));
