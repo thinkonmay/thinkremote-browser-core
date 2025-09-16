@@ -39,7 +39,7 @@ export class MicrophoneRTC {
     }
 
     public Close() {
-        this.sendHandler = () => {}
+        this.sendHandler = () => {};
         this.ws?.close();
         this.ws = undefined;
         this.connected = false;

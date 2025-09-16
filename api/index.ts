@@ -82,7 +82,6 @@ type Computer = {
     CPU?: string;
     RAM?: string;
     BIOS?: string;
-    HideVM?: boolean;
     remoteReady?: boolean;
     virtReady?: boolean;
 
@@ -176,14 +175,13 @@ const ChangeTemplate = async (template: string, volume_id: string) =>
 let deploymentES: EventSource | undefined = undefined;
 const CancelDeployment = () => deploymentES?.close();
 async function StartThinkmay(
-    vm_request: Computer,
     preferred_codec: 'h264' | 'h265',
     preferred_proto: 'quic' | 'udp',
     showStatus: (status: string, code?: number) => Promise<void>
 ): Promise<Computer | APIError> {
     const req = {
         id: uuidv4(),
-        vm: vm_request,
+        vm: {},
         thinkmay: {
             requestedCodec: preferred_codec,
             requestedProtocol: preferred_proto
@@ -212,7 +210,6 @@ function ParseRequest(
     vmid: string,
     session: Session,
     option?: {
-        high_queue?: boolean;
         high_mtu?: boolean;
     }
 ): RemoteCredential {
@@ -221,13 +218,10 @@ function ParseRequest(
     const {
         thinkmay: { requestedCodec, listener }
     } = session;
-    const { high_queue, high_mtu } = option ?? {
-        high_mtu: false,
-        high_queue: true
+    const { high_mtu } = option ?? {
+        high_mtu: false
     };
-    const opt = `&vmid=${vmid}&queue_size=${high_queue ? 64 : 16}&mtu=${
-        high_mtu ? 1400 : 1200
-    }`;
+    const opt = `&vmid=${vmid}&mtu=${high_mtu ? 1400 : 1200}`;
 
     const result: RemoteCredential = {
         videoUrl: '',
