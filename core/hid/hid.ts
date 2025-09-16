@@ -9,7 +9,6 @@ export class HID {
     private prev_sliders: Map<number, number>;
     private prev_axis: Map<number, number>;
 
-    private pressing_keys: number[];
     private relativeMouse: boolean;
     private last_interact: number;
     private SendFunc: (...data: HIDMsg[]) => Promise<void>;
@@ -17,7 +16,8 @@ export class HID {
     private closed: boolean;
     private intervals: any[];
     private video: HTMLVideoElement;
-    private pressing: any[];
+    private pressing_mbuttons: number[];
+    private pressing_keys: number[];
     private gid: number;
 
     private onwheel = this.mouseWheel.bind(this);
@@ -26,15 +26,20 @@ export class HID {
     private onkeyup = this.keyup.bind(this);
     private onmousedown = this.MouseButtonDown.bind(this);
     private onmouseup = this.MouseButtonUp.bind(this);
-    private onmouseup2 = ({ button }) =>
-        (this.pressing = this.pressing.filter((x) => x != button));
-    private onmousedown2 = ({ button }) => this.pressing.push(button);
+    private onmouseup2 = ({ button }: MouseEvent) =>
+        (this.pressing_mbuttons = this.pressing_mbuttons.filter(
+            (x) => x != button
+        ));
+    private onmousedown2 = ({ button }) => this.pressing_mbuttons.push(button);
 
     private lastmousemove2 = new Date().getTime();
-    private onmousemove2 = (ev) => {
+    private onmousemove2 = async (ev: MouseEvent) => {
         if (new Date().getTime() - this.lastmousemove2 < 500) return;
-        else if (ev.target != this.video)
-            this.pressing.forEach((val) => this.MouseButtonUp({ button: val }));
+        else if (ev.target != this.video) {
+            for (const val of this.pressing_mbuttons)
+                await this.MouseButtonUp({ button: val });
+            for (const val of this.pressing_keys) await this.keyupInternal(val);
+        }
         this.lastmousemove2 = new Date().getTime();
     };
 
@@ -57,7 +62,7 @@ export class HID {
         this.scancode = false;
         this.last_interact = Thinkmay.NowInSec();
 
-        this.pressing = [];
+        this.pressing_mbuttons = [];
         this.intervals = [];
         this.pressing_keys = [];
 
@@ -234,7 +239,7 @@ export class HID {
         let code = EventCode.kd;
         if (this.scancode) code += 2;
         await this.SendFunc(new HIDMsg(code, { key }));
-        this.pressing_keys.push(key);
+        if (!this.pressing_keys.includes(key)) this.pressing_keys.push(key);
         this.last_interact = Thinkmay.NowInSec();
     }
     private async keyup(event: KeyboardEvent) {
@@ -242,12 +247,13 @@ export class HID {
         const key = convertJSKey(event.key, event.location);
         if (key == undefined) return;
 
+        await this.keyupInternal(key);
+    }
+    private async keyupInternal(key: number) {
         let code = EventCode.ku;
         if (this.scancode) code += 2;
         await this.SendFunc(new HIDMsg(code, { key }));
-        this.pressing_keys.splice(
-            this.pressing_keys.findIndex((x) => x == key)
-        );
+        this.pressing_keys = this.pressing_keys.filter((x) => x != key);
     }
     private async mouseWheel(event: WheelEvent) {
         await this.SendFunc(
@@ -268,21 +274,18 @@ export class HID {
     private lastmousemove = new Date().getTime();
     private async mouseButtonMovement(event: MouseEvent) {
         if (new Date().getTime() - this.lastmousemove < 15) return;
-        else if (!this.relativeMouse) {
+        else
             await this.SendFunc(
-                new HIDMsg(EventCode.mma, {
-                    dX: this.clientToServerX(event.clientX),
-                    dY: this.clientToServerY(event.clientY)
-                })
+                this.relativeMouse
+                    ? new HIDMsg(EventCode.mmr, {
+                          dX: event.movementX * MOUSE_SPEED,
+                          dY: event.movementY * MOUSE_SPEED
+                      })
+                    : new HIDMsg(EventCode.mma, {
+                          dX: this.clientToServerX(event.clientX),
+                          dY: this.clientToServerY(event.clientY)
+                      })
             );
-        } else {
-            await this.SendFunc(
-                new HIDMsg(EventCode.mmr, {
-                    dX: event.movementX * MOUSE_SPEED,
-                    dY: event.movementY * MOUSE_SPEED
-                })
-            );
-        }
         this.last_interact = Thinkmay.NowInSec();
         this.lastmousemove = new Date().getTime();
     }
