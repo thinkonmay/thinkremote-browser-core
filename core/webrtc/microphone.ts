@@ -25,7 +25,7 @@ export class MicrophoneRTC {
 
         this.host = new URL(url).hostname;
         const ws = new WebSocket(url);
-        this.ws.onopen = () => {
+        ws.onopen = () => {
             this.ws = ws;
             this.ws.onerror = this.Close.bind(this);
             this.ws.onclose = this.Close.bind(this);
@@ -38,12 +38,10 @@ export class MicrophoneRTC {
         };
     }
 
-    public Send(type: MessageType, ...arr: number[]) {
-        this.ws?.send(new Uint8Array([type, ...arr]).buffer);
-    }
-
     public Close() {
+        this.sendHandler = () => {}
         this.ws?.close();
+        this.ws = undefined;
         this.connected = false;
         this.closed = true;
         this.Conn?.close();

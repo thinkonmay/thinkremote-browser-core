@@ -95,7 +95,6 @@ export class MediaRTC {
         this.sendHandler = () => {};
 
         this.host = new URL(url).hostname;
-
         const ws = new WebSocket(url);
         ws.onopen = () => {
             this.ws = ws;
