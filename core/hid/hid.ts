@@ -168,6 +168,7 @@ export class HID {
 
     private async runGamepad() {
         const buttonMap = {};
+        let resetPos = false;
 
         while (!this.closed) {
             const gamepads = navigator.getGamepads().filter((x) => x != null);
@@ -211,14 +212,32 @@ export class HID {
                     }
                     buttonMap[gid] = buttons;
 
-                    for (let index = 0; index < axes.length; index++)
-                        msg.push(
-                            new HIDMsg(EventCode.ga, {
-                                gid: gid,
-                                index: index,
-                                val: axes[index]
-                            })
-                        );
+                    if (
+                        axes.every((val) => Math.abs(val) < 0.01) &&
+                        !resetPos
+                    ) {
+                        resetPos = true;
+                        for (let index = 0; index < axes.length; index++)
+                            msg.push(
+                                new HIDMsg(EventCode.ga, {
+                                    gid: gid,
+                                    index: index,
+                                    val: 0
+                                })
+                            );
+                    } else if (
+                        axes.find((val) => Math.abs(val) > 0.01) != undefined
+                    ) {
+                        resetPos = false;
+                        for (let index = 0; index < axes.length; index++)
+                            msg.push(
+                                new HIDMsg(EventCode.ga, {
+                                    gid: gid,
+                                    index: index,
+                                    val: axes[index]
+                                })
+                            );
+                    }
                 }
 
                 if (msg.length > 0) await this.SendFunc(...msg);
