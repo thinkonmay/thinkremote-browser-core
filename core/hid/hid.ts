@@ -85,14 +85,7 @@ export class HID {
             this.prev_axis.set(x, 0);
         });
 
-        (async () => {
-            while (!this.closed) {
-                try {
-                    const wait_period = await this.runGamepad();
-                    await new Promise((r) => setTimeout(r, wait_period));
-                } catch {}
-            }
-        })();
+        this.runGamepad();
         this.intervals.push(
             setInterval(
                 () =>
@@ -164,45 +157,62 @@ export class HID {
         }
     }
 
-    private async runGamepad(): Promise<number> {
-        const gamepads = navigator.getGamepads().filter((x) => x != null);
-        const msg: HIDMsg[] = [];
-        for (let gamepad_id = 0; gamepad_id < gamepads.length; gamepad_id++) {
-            const { buttons, axes, index } = gamepads[gamepad_id];
-            const gid = this.gid + 1 + index;
+    private async runGamepad() {
+        const buttonMap = {};
 
-            for (let index = 0; index < buttons.length; index++) {
-                const { pressed, value } = buttons[index];
-                if (index == 6 || index == 7)
-                    msg.push(
-                        new HIDMsg(EventCode.gs, {
-                            gid: gid,
-                            index: index,
-                            val: value
-                        })
-                    );
-                else
-                    msg.push(
-                        new HIDMsg(EventCode.gb, {
-                            gid: gid,
-                            index: index,
-                            val: pressed ? 1 : 0
-                        })
-                    );
-            }
+        while (!this.closed) {
+            const msg: HIDMsg[] = [];
+            const gamepads = navigator.getGamepads().filter((x) => x != null);
+            try {
+                for (
+                    let gamepad_id = 0;
+                    gamepad_id < gamepads.length;
+                    gamepad_id++
+                ) {
+                    const { buttons, axes, index } = gamepads[gamepad_id];
+                    const gid = this.gid + 1 + index;
 
-            for (let index = 0; index < axes.length; index++)
-                msg.push(
-                    new HIDMsg(EventCode.ga, {
-                        gid: gid,
-                        index: index,
-                        val: axes[index]
-                    })
-                );
+                    for (let index = 0; index < buttons.length; index++) {
+                        const { pressed, value } = buttons[index];
+                        const { pressed: last_pressed, value: last_value } =
+                            buttonMap[gid][index];
+
+                        if (
+                            (index == 6 || index == 7) &&
+                            Math.abs(last_value - value) > 0.01
+                        )
+                            msg.push(
+                                new HIDMsg(EventCode.gs, {
+                                    gid: gid,
+                                    index: index,
+                                    val: value
+                                })
+                            );
+                        else if (pressed != last_pressed)
+                            msg.push(
+                                new HIDMsg(EventCode.gb, {
+                                    gid: gid,
+                                    index: index,
+                                    val: pressed ? 1 : 0
+                                })
+                            );
+                    }
+                    buttonMap[gid] = buttons;
+
+                    for (let index = 0; index < axes.length; index++)
+                        msg.push(
+                            new HIDMsg(EventCode.ga, {
+                                gid: gid,
+                                index: index,
+                                val: axes[index]
+                            })
+                        );
+                }
+
+                await this.SendFunc(...msg);
+            } catch {}
+            await new Promise((r) => setTimeout(r, 50));
         }
-
-        await this.SendFunc(...msg);
-        return 50;
     }
 
     public ResetKeyStuck = () => this.SendFunc(new HIDMsg(EventCode.kr, {}));
