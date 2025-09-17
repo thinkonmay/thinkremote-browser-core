@@ -402,11 +402,21 @@ class Thinkmay {
     }
 
     public Restore() {
-        const text = JSON.stringify({ id: v4(), backup: {} } as Session);
+        const text = JSON.stringify({
+            id: v4(),
+            backup: {
+                type: 'restore'
+            }
+        } as Session);
         this.logConn?.send(new TextEncoder().encode(text));
     }
-    public Backup(id: string) {
-        const text = JSON.stringify({ id } as Session);
+    public Backup() {
+        const text = JSON.stringify({
+            id: v4(),
+            backup: {
+                type: 'backup'
+            }
+        } as Session);
         this.logConn?.send(new TextEncoder().encode(text));
     }
 

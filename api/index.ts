@@ -141,7 +141,10 @@ type S3Credential = {
     token: string;
     configured: boolean;
 };
-type Backup = {};
+type Backup = {
+    type: 'backup' | 'restore';
+    createdAt?: string;
+};
 
 type Session = {
     id: string;

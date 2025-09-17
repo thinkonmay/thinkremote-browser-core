@@ -83,4 +83,4 @@ export const SetClipboard = (val: string) => CLIENT?.SetClipboard(val);
 export const SetScancode = (val: boolean) => CLIENT?.SetScancode(val);
 export const PointerVisible = (val: boolean) => CLIENT?.PointerVisible(val);
 export const RestoreGame = () => CLIENT?.Restore();
-export const BackupGame = (id: string) => CLIENT?.Backup(id);
+export const BackupGame = () => CLIENT?.Backup();
