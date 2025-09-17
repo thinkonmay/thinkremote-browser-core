@@ -285,7 +285,12 @@ export class HID {
         }
     }
 
-    public ResetKeyStuck = () => this.SendFunc(new HIDMsg(EventCode.kr, {}));
+    public async ResetKeyStuck() {
+        for (const val of this.pressing_mbuttons)
+            await this.MouseButtonUp({ button: val });
+        for (const val of this.pressing_keys) await this.keyupInternal(val);
+        this.SendFunc(new HIDMsg(EventCode.kr, {}));
+    }
 
     private async keydown(event: KeyboardEvent) {
         event.preventDefault();
