@@ -24,7 +24,7 @@ function getFrontendURL(): string {
 export const POCKETBASE = () => new PocketBase(getFrontendURL());
 export const GLOBAL = () =>
     createClient(
-        'https://play.2.thinkmay.net:445',
+        'https://saigon2.thinkmay.net:445',
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzU0OTMxNjAwLCJleHAiOjE5MTI2OTgwMDB9.m7qcf4j3u1oPoqIsCqU3JHqYEO0DV2PmoPXGcdUAdR8'
     );
 
