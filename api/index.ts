@@ -159,6 +159,7 @@ type Session = {
 type RemoteCredential = {
     audioUrl: string;
     videoUrl: string;
+    vncUrl?: string;
     microUrl?: string;
     logUrl?: string;
     hidUrl: string;
@@ -245,6 +246,9 @@ function ParseRequest(
                 break;
             case 'log':
                 result.logUrl = `wss://${address}:444/broadcasters/websocket?token=${id}${opt}`;
+                break;
+            case 'vnc':
+                result.vncUrl = `wss://${address}:444/broadcasters/vnc?token=${id}${opt}`;
                 break;
             case 'microphone':
                 result.microUrl = `wss://${address}:444/broadcasters/webrtc/sendonly?token=${id}${opt}`;
