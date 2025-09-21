@@ -25,7 +25,7 @@ export class DataRTC {
 
     public Close(ev?: Event) {
         this.closed = true;
-
+        this.ws?.close();
         const close = this.closeHandler;
         this.closeHandler = () => {};
         close();

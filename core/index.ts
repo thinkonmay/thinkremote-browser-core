@@ -422,11 +422,13 @@ class Thinkmay {
 
     public Close() {
         this.closed = true;
-        this.logConn?.close();
         clearTimeout(this.missing_frame);
         clearInterval(this.countThread);
+        this.logConn?.close();
         this.hid?.Close();
         this.touch?.Close();
+        this.microConn?.Close();
+        this.dataConn?.Close();
         this.videoConn?.Close();
         this.audioConn?.Close();
         this.video.internal().srcObject = null;
