@@ -35,6 +35,4 @@ const validateIP = (ipaddress: string) =>
             )
         : false;
 
-export const DevEnv =
-    window.location.href.includes('localhost') ||
-    validateIP(window.location.host.split(':')[0]);
+export const DevEnv = false
