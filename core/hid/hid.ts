@@ -288,21 +288,30 @@ export class HID {
         this.SendFunc(new HIDMsg(EventCode.kr, {}));
     }
 
+    private lastKeyActivity: number;
     private async keydown(event: KeyboardEvent) {
         event.preventDefault();
         const key = convertJSKey(event.key, event.location);
         if (key == undefined) return;
+        while (new Date().getTime() - this.lastKeyActivity < 6)
+            await new Promise((r) => setTimeout(r, 1));
+
         let code = EventCode.kd;
         if (this.scancode) code += 2;
         await this.SendFunc(new HIDMsg(code, { key }));
         if (!this.pressing_keys.includes(key)) this.pressing_keys.push(key);
         this.last_interact = Thinkmay.NowInSec();
+        this.lastKeyActivity = new Date().getTime();
     }
     private async keyup(event: KeyboardEvent) {
         event.preventDefault();
         const key = convertJSKey(event.key, event.location);
         if (key == undefined) return;
+        while (new Date().getTime() - this.lastKeyActivity < 6)
+            await new Promise((r) => setTimeout(r, 1));
+
         await this.keyupInternal(key);
+        this.lastKeyActivity = new Date().getTime();
     }
     private async keyupInternal(key: number) {
         let code = EventCode.ku;
