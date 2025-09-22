@@ -75,12 +75,12 @@ export class HID {
         this.video.addEventListener('mouseup', this.onmouseup);
         this.video.addEventListener('mousedown', this.onmousedown2);
         this.video.addEventListener('mouseup', this.onmouseup2);
+        this.video.addEventListener('mousemove', this.onmousemove);
 
         /**
          * document event
          */
         document.addEventListener('wheel', this.onwheel);
-        document.addEventListener('mousemove', this.onmousemove);
         document.addEventListener('mousemove', this.onmousemove2);
         document.addEventListener('keydown', this.onkeydown);
         document.addEventListener('keyup', this.onkeyup);
@@ -115,9 +115,9 @@ export class HID {
         this.video.removeEventListener('mouseup', this.onmouseup);
         this.video.removeEventListener('mousedown', this.onmousedown2);
         this.video.removeEventListener('mouseup', this.onmouseup2);
+        this.video.removeEventListener('mousemove', this.onmousemove);
         document.removeEventListener('mousemove', this.onmousemove2);
         document.removeEventListener('wheel', this.onwheel);
-        document.removeEventListener('mousemove', this.onmousemove);
         document.removeEventListener('keydown', this.onkeydown);
         document.removeEventListener('keyup', this.onkeyup);
     }
