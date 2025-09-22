@@ -32,15 +32,12 @@ export class HID {
         ));
     private onmousedown2 = ({ button }) => this.pressing_mbuttons.push(button);
 
-    private lastmousemove2 = new Date().getTime();
     private onmousemove2 = async (ev: MouseEvent) => {
-        if (new Date().getTime() - this.lastmousemove2 < 500) return;
-        else if (ev.target != this.video) {
+        if (ev.target != this.video) {
             for (const val of this.pressing_mbuttons)
                 await this.MouseButtonUp({ button: val });
             for (const val of this.pressing_keys) await this.keyupInternal(val);
         }
-        this.lastmousemove2 = new Date().getTime();
     };
 
     constructor(
@@ -279,7 +276,7 @@ export class HID {
                 if (msg.length > 0) await this.SendFunc(...msg);
             } catch {}
             await new Promise((r) =>
-                setTimeout(r, gamepads.length > 0 ? 20 : 1000)
+                setTimeout(r, gamepads.length > 0 ? 15 : 1000)
             );
         }
     }
@@ -291,30 +288,21 @@ export class HID {
         this.SendFunc(new HIDMsg(EventCode.kr, {}));
     }
 
-    private lastKeyActivity: number;
     private async keydown(event: KeyboardEvent) {
         event.preventDefault();
         const key = convertJSKey(event.key, event.location);
         if (key == undefined) return;
-        while (new Date().getTime() - this.lastKeyActivity < 6)
-            await new Promise((r) => setTimeout(r, 1));
-
         let code = EventCode.kd;
         if (this.scancode) code += 2;
         await this.SendFunc(new HIDMsg(code, { key }));
         if (!this.pressing_keys.includes(key)) this.pressing_keys.push(key);
         this.last_interact = Thinkmay.NowInSec();
-        this.lastKeyActivity = new Date().getTime();
     }
     private async keyup(event: KeyboardEvent) {
         event.preventDefault();
         const key = convertJSKey(event.key, event.location);
         if (key == undefined) return;
-        while (new Date().getTime() - this.lastKeyActivity < 6)
-            await new Promise((r) => setTimeout(r, 1));
-
         await this.keyupInternal(key);
-        this.lastKeyActivity = new Date().getTime();
     }
     private async keyupInternal(key: number) {
         let code = EventCode.ku;
@@ -338,23 +326,19 @@ export class HID {
         );
     }
 
-    private lastmousemove = new Date().getTime();
     private async mouseButtonMovement(event: MouseEvent) {
-        if (new Date().getTime() - this.lastmousemove < 15) return;
-        else
-            await this.SendFunc(
-                this.relativeMouse
-                    ? new HIDMsg(EventCode.mmr, {
-                          dX: event.movementX * MOUSE_SPEED,
-                          dY: event.movementY * MOUSE_SPEED
-                      })
-                    : new HIDMsg(EventCode.mma, {
-                          dX: this.clientToServerX(event.clientX),
-                          dY: this.clientToServerY(event.clientY)
-                      })
-            );
+        await this.SendFunc(
+            this.relativeMouse
+                ? new HIDMsg(EventCode.mmr, {
+                      dX: event.movementX * MOUSE_SPEED,
+                      dY: event.movementY * MOUSE_SPEED
+                  })
+                : new HIDMsg(EventCode.mma, {
+                      dX: this.clientToServerX(event.clientX),
+                      dY: this.clientToServerY(event.clientY)
+                  })
+        );
         this.last_interact = Thinkmay.NowInSec();
-        this.lastmousemove = new Date().getTime();
     }
 
     public async MouseButtonDown({ button }: { button: number }) {

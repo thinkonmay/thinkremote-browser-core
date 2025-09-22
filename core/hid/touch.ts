@@ -106,10 +106,8 @@ export class TouchHandler {
         }
     };
 
-    private lasttouchmove = new Date().getTime();
     private handleMove = async (evt: TouchEvent) => {
         evt.preventDefault();
-        if (new Date().getTime() - this.lasttouchmove < 15) return;
         const touches = evt.touches;
 
         for (let i = 0; i < touches.length; i++) {
@@ -130,7 +128,6 @@ export class TouchHandler {
 
             prev_touch.copyFromTouch(curr_touch);
         }
-        this.lasttouchmove = new Date().getTime();
     };
 
     private isTouchRight(touch: Touch): boolean {
