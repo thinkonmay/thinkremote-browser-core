@@ -1,5 +1,3 @@
-import { MessageType } from './media';
-
 export class MicrophoneRTC {
     public connected: boolean;
     public closed: boolean;

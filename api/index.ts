@@ -242,7 +242,7 @@ function ParseRequest(
                 result.audioUrl = `wss://${address}:444/broadcasters/webrtc/recvonly?token=${id}${opt}&codec=opus`;
                 break;
             case 'hid':
-                result.hidUrl = `wss://${address}:444/broadcasters/websocket?token=${id}${opt}`;
+                result.hidUrl = `wss://${address}:444/broadcasters/webrtc/sendonly?token=${id}${opt}`;
                 break;
             case 'log':
                 result.logUrl = `wss://${address}:444/broadcasters/websocket?token=${id}${opt}`;

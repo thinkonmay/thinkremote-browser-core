@@ -124,9 +124,8 @@ export class HID {
 
     public last_active = () => Thinkmay.SinceSec(this.last_interact);
 
-    public async handleIncomingData(blob: Blob) {
-        const data = await blob.text();
-        const buff = new TextEncoder().encode(data);
+    public async handleIncomingData(data: ArrayBuffer) {
+        const buff = new Uint8Array(data);
         switch (buff[0]) {
             case EventCode.grum:
                 const weakMagnitude = buff[2] / 255;
@@ -148,7 +147,7 @@ export class HID {
                 });
                 break;
             case EventCode.noti:
-                const str = data.slice(1);
+                const str = new TextDecoder('utf-8').decode(data.slice(1));
                 const ctrlNotFound = 'controller not found ';
                 if (str.includes(ctrlNotFound))
                     this.SendFunc(
@@ -298,24 +297,24 @@ export class HID {
         const key = convertJSKey(event.key, event.location);
         if (key == undefined) return;
         while (new Date().getTime() - this.lastKeyActivity < 6)
-            await new Promise(r => setTimeout(r,1))
+            await new Promise((r) => setTimeout(r, 1));
 
         let code = EventCode.kd;
         if (this.scancode) code += 2;
         await this.SendFunc(new HIDMsg(code, { key }));
         if (!this.pressing_keys.includes(key)) this.pressing_keys.push(key);
         this.last_interact = Thinkmay.NowInSec();
-        this.lastKeyActivity = new Date().getTime()
+        this.lastKeyActivity = new Date().getTime();
     }
     private async keyup(event: KeyboardEvent) {
         event.preventDefault();
         const key = convertJSKey(event.key, event.location);
         if (key == undefined) return;
         while (new Date().getTime() - this.lastKeyActivity < 6)
-            await new Promise(r => setTimeout(r,1))
+            await new Promise((r) => setTimeout(r, 1));
 
         await this.keyupInternal(key);
-        this.lastKeyActivity = new Date().getTime()
+        this.lastKeyActivity = new Date().getTime();
     }
     private async keyupInternal(key: number) {
         let code = EventCode.ku;
