@@ -50,7 +50,7 @@ async function internalSSE<T>(
     const id = await internalFetch<string>(command, body);
     if (id instanceof APIError) return id;
 
-    const evtSource = new EventSource(`${pb.baseURL}/${command}/sse?id=${id}`);
+    const evtSource = new EventSource(`${pb.baseUrl}/${command}/sse?id=${id}`);
     if (callback) callback(evtSource);
 
     let result: T = null;
@@ -217,7 +217,7 @@ function ParseRequest(
         high_mtu?: boolean;
     }
 ): RemoteCredential {
-    const address = new URL(POCKETBASE().baseURL).host;
+    const address = new URL(POCKETBASE().baseUrl).host;
 
     const {
         thinkmay: { requestedCodec, listener }
