@@ -276,7 +276,7 @@ export class HID {
                 if (msg.length > 0) await this.SendFunc(...msg);
             } catch {}
             await new Promise((r) =>
-                setTimeout(r, gamepads.length > 0 ? 25 : 1000)
+                setTimeout(r, gamepads.length > 0 ? 35 : 1000)
             );
         }
     }

@@ -188,7 +188,8 @@ export class DataRTC {
 
     public Send(msg: HIDMsg) {
         if (this.closed) return;
-        const data = new Uint32Array([msg.convertType(), ...msg.buffer()]).buffer;
+        const data = new Uint32Array([msg.convertType(), ...msg.buffer()])
+            .buffer;
         return this.internalSend(data);
     }
     public SendClipboard(val: string) {
