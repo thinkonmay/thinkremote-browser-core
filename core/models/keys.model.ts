@@ -50,60 +50,48 @@ export class HIDMsg {
     }
 
     public buffer(): number[] {
+        let val = 0;
         switch (this.code) {
             case EventCode.ku:
-                return [this.data.key];
+                return [this.data.key, 0, 0];
             case EventCode.kd:
-                return [this.data.key];
+                return [this.data.key, 0, 0];
             case EventCode.kus:
-                return [this.data.key];
+                return [this.data.key, 0, 0];
             case EventCode.kds:
-                return [this.data.key];
+                return [this.data.key, 0, 0];
             case EventCode.kr:
-                return [];
+                return [0, 0, 0];
 
             case EventCode.mu:
-                return [this.data.button];
+                return [this.data.button, 0, 0];
             case EventCode.md:
-                return [this.data.button];
+                return [this.data.button, 0, 0];
 
             case EventCode.mmr:
                 return [
                     Math.round(this.data.dX) + 16 * 1024,
-                    Math.round(this.data.dY) + 16 * 1024
+                    Math.round(this.data.dY) + 16 * 1024,
+                    0
                 ];
             case EventCode.mma:
                 return [
                     Math.round(this.data.dX * 2 ** 32) - 1,
-                    Math.round(this.data.dY * 2 ** 32) - 1
+                    Math.round(this.data.dY * 2 ** 32) - 1,
+                    0
                 ];
             case EventCode.mw:
-                return [this.data.deltaY + 2048];
+                return [this.data.deltaY + 2048, 0, 0];
 
             case EventCode.gconn:
-                return [this.data.gid];
+                return [this.data.gid, 0, 0];
             case EventCode.gdis:
-                return [this.data.gid];
+                return [this.data.gid, 0, 0];
             case EventCode.gb:
                 return [this.data.gid, this.data.index, this.data.val];
             case EventCode.ga:
-                return [
-                    this.data.gid,
-                    this.data.index,
-                    Math.round(
-                        ((this.data.val >= 1
-                            ? 0.999
-                            : this.data.val <= -1
-                              ? -0.999
-                              : this.data.val) +
-                            1) *
-                            2 ** 31
-                    ) - 1
-                ];
             case EventCode.gs:
-                return [
-                    this.data.gid,
-                    this.data.index,
+                val =
                     Math.round(
                         ((this.data.val >= 1
                             ? 0.999
@@ -112,8 +100,9 @@ export class HIDMsg {
                               : this.data.val) +
                             1) *
                             2 ** 31
-                    ) - 1
-                ];
+                    ) - 1;
+
+                return [this.data.gid, this.data.index, val];
             default:
                 return [];
         }

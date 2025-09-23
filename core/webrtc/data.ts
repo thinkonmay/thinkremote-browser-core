@@ -186,17 +186,16 @@ export class DataRTC {
         this.dc?.send(buff);
     };
 
-    public Send(msg: HIDMsg) {
+    public Send(...msgs: HIDMsg[]) {
         if (this.closed) return;
-        const data = new Uint32Array([msg.convertType(), ...msg.buffer()])
-            .buffer;
-        return this.internalSend(data);
+        const buff = [];
+        for (const msg of msgs) buff.push(msg.convertType(), ...msg.buffer());
+        return this.internalSend(new Uint32Array(buff).buffer);
     }
     public SendClipboard(val: string) {
         if (this.closed) return;
-        const first = new Uint8Array([EventCode.cs, 0, 0, 0]);
         const data = this.concatTypedArrays(
-            first,
+            new Uint8Array([EventCode.cs, 0, 0, 0]),
             new TextEncoder().encode(val)
         );
 

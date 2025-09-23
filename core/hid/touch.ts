@@ -110,12 +110,13 @@ export class TouchHandler {
         evt.preventDefault();
         const touches = evt.touches;
 
+        const data: HIDMsg[] = [];
         for (let i = 0; i < touches.length; i++) {
             const curr_touch = touches[i];
             const prev_touch = this.onGoingTouchs.get(curr_touch.identifier);
-
             if (prev_touch == undefined) continue;
-            await this.SendFunc(
+
+            data.push(
                 new HIDMsg(EventCode.mmr, {
                     dX:
                         MOUSE_SPEED *
@@ -128,6 +129,7 @@ export class TouchHandler {
 
             prev_touch.copyFromTouch(curr_touch);
         }
+        if (data.length > 0) await this.SendFunc(...data);
     };
 
     private isTouchRight(touch: Touch): boolean {
