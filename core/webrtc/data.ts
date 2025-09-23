@@ -1,4 +1,5 @@
 import { EventCode } from '..';
+import { HIDMsg } from '../models/keys.model';
 
 export class DataRTC {
     public connected: boolean;
@@ -185,9 +186,9 @@ export class DataRTC {
         this.dc?.send(buff);
     };
 
-    public Send(type: EventCode, ...arr: number[]) {
+    public Send(msg: HIDMsg) {
         if (this.closed) return;
-        const data = new Uint32Array([type, ...arr]).buffer;
+        const data = new Uint32Array([msg.convertType(), ...msg.buffer()]).buffer;
         return this.internalSend(data);
     }
     public SendClipboard(val: string) {

@@ -384,21 +384,16 @@ class Thinkmay {
 
     public AddLogCb = (cb: LogCb) => this.vmLogCb.push(cb);
 
-    SendRawHID(...data: HIDMsg[]) {
+    private HIDqueue : HIDMsg[] = []
+    private async SendRawHID(...data: HIDMsg[]) {
         if (this.closed) return;
-        const first = data.shift();
-        data.forEach((follow, index) =>
-            setTimeout(
-                () =>
-                    this.dataConn?.Send(
-                        follow.convertType(),
-                        ...follow.buffer()
-                    ),
-                (index + 1) * 5
-            )
-        );
-
-        return this.dataConn?.Send(first.convertType(), ...first.buffer());
+        if (this.HIDqueue.length > 0) 
+            this.HIDqueue.push(...data)
+        else {
+            this.HIDqueue.push(...data)
+            while(this.HIDqueue.length > 0)
+                await this.dataConn?.Send(this.HIDqueue.shift());
+        }
     }
 
     public Restore() {
