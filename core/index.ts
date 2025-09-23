@@ -116,7 +116,7 @@ class Thinkmay {
                         })
                     )
                     .pipeTo(frameStreams.writable);
-            } catch {}
+            } catch { }
 
         await this.video.assign(stream);
         await this.video.play();
@@ -141,7 +141,7 @@ class Thinkmay {
                         })
                     )
                     .pipeTo(frameStreams.writable);
-            } catch {}
+            } catch { }
 
         await this.audio.assign(stream);
         await this.audio.play();
@@ -153,9 +153,9 @@ class Thinkmay {
             case 'video':
                 this.Metrics.video.frame.persecond = Math.round(
                     (val.framesDecoded - this.Metrics.video.frame.totalframes) /
-                        ((now.getTime() -
-                            this.Metrics.video.timestamp.getTime()) /
-                            1000)
+                    ((now.getTime() -
+                        this.Metrics.video.timestamp.getTime()) /
+                        1000)
                 );
                 this.Metrics.video.frame.decodetime =
                     ((val.totalDecodeTime +
@@ -183,7 +183,7 @@ class Thinkmay {
                             this.Metrics.video.timestamp.getTime()) /
                             1000)) *
                         8) /
-                        1024
+                    1024
                 );
                 this.Metrics.video.bitrate.total = val.bytesReceived;
 
@@ -327,15 +327,15 @@ class Thinkmay {
                 index == 6 || index == 7 ? EventCode.gs : EventCode.gb,
                 index == 6 || index == 7
                     ? {
-                          gid: this.gid,
-                          index: index,
-                          val: !isDown ? 0 : 1
-                      }
+                        gid: this.gid,
+                        index: index,
+                        val: !isDown ? 0 : 1
+                    }
                     : {
-                          gid: this.gid,
-                          index: index,
-                          val: !isDown ? 0 : 1
-                      }
+                        gid: this.gid,
+                        index: index,
+                        val: !isDown ? 0 : 1
+                    }
             )
         );
     public ResetKeyStuck = () => this.hid.ResetKeyStuck();
@@ -390,8 +390,10 @@ class Thinkmay {
         if (this.HIDqueue.length > 0) this.HIDqueue.push(...data);
         else {
             this.HIDqueue.push(...data);
-            while (this.HIDqueue.length > 0)
+            while (this.HIDqueue.length > 0) {
                 await this.dataConn?.Send(this.HIDqueue.shift());
+                await new Promise(r => setTimeout(r, 5))
+            }
         }
     }
 
