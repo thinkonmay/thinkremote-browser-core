@@ -229,12 +229,12 @@ export class MediaRTC {
         }
     }
 
-    public async onIncomingICE(ice: RTCIceCandidateInit) {
+    private async onIncomingICE(ice: RTCIceCandidateInit) {
         const candidate = new RTCIceCandidate(ice);
         await this.Conn.addIceCandidate(candidate);
     }
 
-    public async onIncomingSDP(
+    private async onIncomingSDP(
         sdp: RTCSessionDescriptionInit
     ): Promise<RTCSessionDescriptionInit> {
         if (sdp.type != 'offer') return;

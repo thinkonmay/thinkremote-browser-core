@@ -185,12 +185,12 @@ export class MicrophoneRTC {
         }
     }
 
-    public async onIncomingICE(ice: RTCIceCandidateInit) {
+    private async onIncomingICE(ice: RTCIceCandidateInit) {
         const candidate = new RTCIceCandidate(ice);
         await this.Conn.addIceCandidate(candidate);
     }
 
-    public async onIncomingSDP(sdp: RTCSessionDescriptionInit): Promise<void> {
+    private async onIncomingSDP(sdp: RTCSessionDescriptionInit): Promise<void> {
         if (sdp.type != 'answer') return;
         await this.Conn.setRemoteDescription(sdp);
     }
