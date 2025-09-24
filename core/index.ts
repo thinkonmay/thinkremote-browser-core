@@ -395,7 +395,7 @@ class Thinkmay {
             while (this.HIDqueue.length > 0) {
                 await this.dataConn?.Send(...this.HIDqueue);
                 this.HIDqueue = [];
-                await new Promise((r) => setTimeout(r, 15));
+                await new Promise((r) => setTimeout(r, 10));
             }
             this.sending = false;
         }
