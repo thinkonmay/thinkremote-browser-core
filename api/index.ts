@@ -233,7 +233,7 @@ function ParseRequest(
         hidUrl: ''
     };
 
-    listener.forEach(({ id, content }) => {
+    listener?.forEach(({ id, content }) => {
         switch (content) {
             case 'video':
                 result.videoUrl = `wss://${address}:444/broadcasters/webrtc/recvonly?&token=${id}${opt}&codec=${requestedCodec}`;
