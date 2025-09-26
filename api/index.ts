@@ -234,7 +234,7 @@ function ParseRequest(
     };
 
     if (listener == undefined) {
-        return new Error('invalid request')
+        return new Error('invalid request');
     }
 
     listener.forEach(({ id, content }) => {
@@ -281,7 +281,11 @@ function getRemoteSession(computer: Computer): Session | undefined {
             if (subsession != undefined) return subsession;
         }
 
-        if (session.thinkmay != undefined) return session;
+        if (
+            session.thinkmay != undefined &&
+            session.thinkmay?.listener != undefined
+        )
+            return session;
     }
 
     return undefined;
