@@ -216,7 +216,7 @@ function ParseRequest(
     option?: {
         high_mtu?: boolean;
     }
-): RemoteCredential {
+): RemoteCredential | Error {
     const address = new URL(POCKETBASE().baseURL).host;
 
     const {
@@ -233,7 +233,11 @@ function ParseRequest(
         hidUrl: ''
     };
 
-    listener?.forEach(({ id, content }) => {
+    if (listener == undefined) {
+        return new Error('invalid request')
+    }
+
+    listener.forEach(({ id, content }) => {
         switch (content) {
             case 'video':
                 result.videoUrl = `wss://${address}:444/broadcasters/webrtc/recvonly?&token=${id}${opt}&codec=${requestedCodec}`;
