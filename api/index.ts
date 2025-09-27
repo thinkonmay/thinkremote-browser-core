@@ -12,6 +12,8 @@ export class APIError {
     }
 }
 
+type ErrorTrigger = (error?: APIError) => void;
+
 async function internalFetch<T>(
     command: string,
     body?: any
@@ -43,7 +45,7 @@ async function internalSSE<T>(
     command: string,
     body?: any,
     feedback?: (data: T) => Promise<void>,
-    callback?: (data: EventSource) => void
+    callback?: (data: ErrorTrigger) => void
 ): Promise<T | APIError> {
     const pb = POCKETBASE();
 
@@ -51,7 +53,12 @@ async function internalSSE<T>(
     if (id instanceof APIError) return id;
 
     const evtSource = new EventSource(`${pb.baseURL}/${command}/sse?id=${id}`);
-    if (callback) callback(evtSource);
+    let error: APIError = null;
+    if (callback)
+        callback((err) => {
+            error = err;
+            evtSource.close();
+        });
 
     let result: T = null;
     if (feedback != undefined)
@@ -65,7 +72,7 @@ async function internalSSE<T>(
     while (evtSource.readyState != evtSource.CLOSED)
         await new Promise((r) => setTimeout(r, 100));
 
-    return result;
+    return error != null ? error : result;
 }
 
 type Volume = {
@@ -176,8 +183,9 @@ const ChangeTemplate = async (template: string, volume_id: string) =>
         id: volume_id
     });
 
-let deploymentES: EventSource | undefined = undefined;
-const CancelDeployment = () => deploymentES?.close();
+let deploymentES: ErrorTrigger | undefined = undefined;
+const CancelDeployment = (reason?: APIError) =>
+    deploymentES != null ? deploymentES(reason) : null;
 async function StartThinkmay(
     preferred_codec: 'h264' | 'h265',
     preferred_proto: 'quic' | 'udp',
