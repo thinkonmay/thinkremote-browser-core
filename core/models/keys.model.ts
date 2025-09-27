@@ -81,7 +81,7 @@ export class HIDMsg {
                     0
                 ];
             case EventCode.mw:
-                return [this.data.deltaY + 2048, 0, 0];
+                return [this.data.deltaY + 2048, this.data.deltaX + 2048, 0];
 
             case EventCode.gconn:
                 return [this.data.gid, 0, 0];
