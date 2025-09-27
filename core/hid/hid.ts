@@ -253,7 +253,7 @@ export class HID {
         await this.SendFunc(
             new HIDMsg(EventCode.mw, {
                 deltaY: -Math.round(event.deltaY),
-                deltaX: -Math.round(event.deltaX)
+                deltaX: Math.round(event.deltaX)
             })
         );
     }
