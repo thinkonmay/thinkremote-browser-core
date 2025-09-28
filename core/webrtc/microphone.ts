@@ -22,8 +22,19 @@ export class MicrophoneRTC {
         this.sendHandler = () => {};
 
         this.host = new URL(url).hostname;
+        this.connect(url).catch(this.Close);
+    }
+
+    private async connect(url: string) {
         const ws = new WebSocket(url);
+        const timeout = setTimeout(() => {
+            if (ws.readyState != ws.OPEN) {
+                ws.close();
+                this.Close();
+            }
+        }, 3000);
         ws.onopen = () => {
+            clearTimeout(timeout);
             this.ws = ws;
             this.ws.onerror = this.Close.bind(this);
             this.ws.onclose = this.Close.bind(this);
