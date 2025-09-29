@@ -172,16 +172,35 @@ type RemoteCredential = {
     hidUrl: string;
 };
 
+type ReinstallCb = (
+    finished: boolean,
+    percentage?: number,
+    err?: string
+) => Promise<void>;
+type reinstallData = {
+    finished?: boolean;
+    percentage?: number;
+    error?: string;
+};
 const GetInfo = () => internalFetch<Computer>('info');
 const ClaimStorage = () => internalFetch<string>('storage');
 const ClaimSteam = () => internalFetch<string>('steam');
 const UnclaimResource = () => internalFetch<void>('resource');
 const CloseSession = (req: Session) => internalFetch<Computer>('close', req);
-const ChangeTemplate = async (template: string, volume_id: string) =>
-    internalSSE<void>('reallocate', {
-        source: `${template}.template`,
-        id: volume_id
-    });
+const ChangeTemplate = async (
+    template: string,
+    volume_id: string,
+    cb: ReinstallCb
+) =>
+    internalSSE<reinstallData>(
+        'reallocate',
+        {
+            source: `${template}.template`,
+            id: volume_id
+        },
+        ({ percentage, finished, error }) =>
+            cb(finished == true, percentage, error)
+    );
 
 let deploymentES: ErrorTrigger | undefined = undefined;
 const CancelDeployment = (reason?: APIError) =>
