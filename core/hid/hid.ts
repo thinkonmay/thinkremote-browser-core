@@ -248,8 +248,7 @@ export class HID {
         this.pressing_keys = this.pressing_keys.filter((x) => x != key);
     }
     private async mouseWheel(event: WheelEvent) {
-        if (event.deltaX == 0 && event.deltaY == 0) return;
-        event.preventDefault();
+        if (event.deltaX != 0 || event.deltaY != 0) event.preventDefault();
         await this.SendFunc(
             new HIDMsg(EventCode.mw, {
                 deltaY: -Math.round(event.deltaY),
