@@ -241,10 +241,11 @@ function ParseRequest(
     vmid: string,
     session: Session,
     option?: {
+        addr_override?: string;
         high_mtu?: boolean;
     }
 ): RemoteCredential | Error {
-    const address = new URL(POCKETBASE().baseURL).host;
+    const address = option?.addr_override ?? new URL(POCKETBASE().baseURL).host;
 
     const {
         thinkmay: { requestedCodec, listener }
