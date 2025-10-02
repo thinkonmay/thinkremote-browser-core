@@ -245,7 +245,8 @@ function ParseRequest(
         high_mtu?: boolean;
     }
 ): RemoteCredential | Error {
-    const address = option?.addr_override ?? new URL(POCKETBASE().baseURL).host;
+    const pb = new URL(POCKETBASE().baseURL).host;
+    const address = option?.addr_override ?? pb
 
     const {
         thinkmay: { requestedCodec, listener }
@@ -274,16 +275,16 @@ function ParseRequest(
                 result.audioUrl = `wss://${address}:444/broadcasters/webrtc/recvonly?token=${id}${opt}&codec=opus`;
                 break;
             case 'hid':
-                result.hidUrl = `wss://${address}:444/broadcasters/webrtc/sendonly?token=${id}${opt}`;
+                result.hidUrl = `wss://${pb}:444/broadcasters/webrtc/sendonly?token=${id}${opt}`;
                 break;
             case 'log':
-                result.logUrl = `wss://${address}:444/broadcasters/websocket?token=${id}${opt}`;
+                result.logUrl = `wss://${pb}:444/broadcasters/websocket?token=${id}${opt}`;
                 break;
             case 'vnc':
-                result.vncUrl = `wss://${address}:444/broadcasters/vnc?token=${id}${opt}`;
+                result.vncUrl = `wss://${pb}:444/broadcasters/vnc?token=${id}${opt}`;
                 break;
             case 'microphone':
-                result.microUrl = `wss://${address}:444/broadcasters/webrtc/sendonly?token=${id}${opt}`;
+                result.microUrl = `wss://${pb}:444/broadcasters/webrtc/sendonly?token=${id}${opt}`;
                 break;
             default:
                 break;
