@@ -14,6 +14,28 @@ export class APIError {
 
 type ErrorTrigger = (error?: APIError) => void;
 
+async function internalFetchFile<T>(
+    command: string,
+    body?: Blob
+): Promise<Blob | APIError> {
+    try {
+        let returnBody: Blob = undefined;
+        await POCKETBASE().send<T>(command, {
+            method: body != undefined ? 'POST' : 'GET',
+            fetch: async (url, conf) => {
+                const result = await fetch(url, { ...conf, body });
+                returnBody = await result.clone().blob();
+                return result;
+            }
+        });
+
+        return returnBody;
+    } catch (e) {
+        const cre = e as ClientResponseError;
+        return new APIError(cre.message ?? 'Unknown error', cre.status ?? 500);
+    }
+}
+
 async function internalFetch<T>(
     command: string,
     body?: any
@@ -32,7 +54,7 @@ async function internalFetch<T>(
 
     try {
         return await POCKETBASE().send<T>(command, {
-            method: methodMap[command] ?? 'POST',
+            method: methodMap[command] ?? (body != undefined ? 'POST' : 'GET'),
             body: body
         });
     } catch (e) {
@@ -172,6 +194,12 @@ type RemoteCredential = {
     hidUrl: string;
 };
 
+type File = {
+    key: string;
+    created?: string;
+    size?: number;
+};
+
 type ReinstallCb = (
     finished: boolean,
     percentage?: number,
@@ -185,6 +213,11 @@ type reinstallData = {
 const GetInfo = () => internalFetch<Computer>('info');
 const ClaimStorage = () => internalFetch<string>('storage');
 const ClaimSteam = () => internalFetch<string>('steam');
+const ListObjects = (path: string) => internalFetch<File[]>(`files/v1/${path}`);
+const DownloadObject = (path: string) =>
+    internalFetchFile<string>(`file/v1/${path}`);
+const UploadObject = (path: string, data: Blob) =>
+    internalFetchFile<File[]>(`file/v1/${path}`, data);
 const UnclaimResource = () => internalFetch<void>('resource');
 const CloseSession = (req: Session) => internalFetch<Computer>('close', req);
 const ChangeTemplate = async (
@@ -246,7 +279,7 @@ function ParseRequest(
     }
 ): RemoteCredential | Error {
     const pb = new URL(POCKETBASE().baseURL).host;
-    const address = option?.addr_override ?? pb
+    const address = option?.addr_override ?? pb;
 
     const {
         thinkmay: { requestedCodec, listener }
@@ -331,7 +364,10 @@ export {
     getRemoteSession,
     getVmSession,
     GLOBAL,
+    ListObjects,
     ParseRequest,
+    DownloadObject,
+    UploadObject,
     POCKETBASE,
     StartThinkmay,
     UnclaimResource
