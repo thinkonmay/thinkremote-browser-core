@@ -15,6 +15,7 @@ import { MicrophoneRTC } from './webrtc/microphone';
 const ssgid = 0;
 
 class Thinkmay {
+    public closed: boolean;
     public Metrics: Metric;
     public static NowInSec = () => new Date().getTime() / 1000;
     public static SinceSec = (time: number) => this.NowInSec() - time;
@@ -32,7 +33,6 @@ class Thinkmay {
     private audioConn: MediaRTC;
     private microConn: MicrophoneRTC;
     private dataConn: DataRTC;
-    private closed: boolean;
     private gid = ssgid;
 
     constructor(
