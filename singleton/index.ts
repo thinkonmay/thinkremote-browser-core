@@ -32,8 +32,7 @@ export const ready = async (): Promise<Error | void> => {
         await new Promise((r) => setTimeout(r, 1000));
         if (Thinkmay.SinceSec(start) > 10 * 60)
             return new Error('connect timeout');
-        else if (CLIENT.closed)
-            return new Error('user cancelled connection');
+        else if (CLIENT.closed) return new Error('user cancelled connection');
         else if (CLIENT.AuthFailed())
             return new Error('streaming auth failure');
     }
