@@ -129,13 +129,17 @@ export class HID {
                 const strongMagnitude = buff[3] / 255;
                 const duration = 1000;
 
+                let gamepads = navigator.getGamepads();
+                gamepads = gamepads
+                    ? [...gamepads].filter((gamepad) => gamepad !== null)
+                    : [];
                 if (
                     (strongMagnitude > 0 || weakMagnitude > 0) &&
-                    navigator.getGamepads().length == 0
+                    gamepads.length == 0
                 )
                     navigator.vibrate?.(duration);
 
-                navigator.getGamepads().forEach((gamepad: Gamepad | null) => {
+                gamepads.forEach((gamepad: Gamepad | null) => {
                     gamepad?.vibrationActuator?.playEffect('dual-rumble', {
                         duration,
                         weakMagnitude,
@@ -165,7 +169,11 @@ export class HID {
     private async runGamepad() {
         const timestampMap = {};
         while (!this.closed) {
-            const gamepads = navigator.getGamepads().filter((x) => x != null);
+            let gamepads = navigator.getGamepads();
+            gamepads = gamepads
+                ? [...gamepads].filter((gamepad) => gamepad !== null)
+                : [];
+
             try {
                 const msg: HIDMsg[] = [];
                 for (
